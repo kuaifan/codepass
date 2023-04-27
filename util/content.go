@@ -22,42 +22,42 @@ CmdPath=$0
 
 # 输出 OK
 OK() {
-    echo "${Green}[OK]${Font} ${GreenBG}$1${Font}"
+	echo "${Green}[OK]${Font} ${GreenBG}$1${Font}"
 }
 
 # 输出 ERR
 ERR() {
-    echo "${Red}[ERR]${Font} ${RedBG}$1${Font}"
-    rm -f $CmdPath
-    exit 1
+	echo "${Red}[ERR]${Font} ${RedBG}$1${Font}"
+	rm -f $CmdPath
+	exit 1
 }
 
 # 检测 docker
 check_docker() {
-    docker --version &> /dev/null
-    if [ $? -ne  0 ]; then
-        echo "安装docker环境..."
-        curl -sSL https://get.daocloud.io/docker | sh
-        OK "Docker环境安装完成"
-    fi
-	if [ "$(uname)" == "Linux" ]; then
-    	systemctl start docker
-        if [[ 0 -ne $? ]]; then
-            ERR "Docker 启动 失败"
-        fi
+	docker --version &> /dev/null
+	if [ $? -ne  0 ]; then
+		echo "安装docker环境..."
+		curl -sSL https://get.daocloud.io/docker | sh
+		OK "Docker环境安装完成"
 	fi
-    #
-    docker-compose --version &> /dev/null
-    if [ $? -ne  0 ]; then
-        echo "安装docker-compose..."
-        curl -s -L "https://get.daocloud.io/docker/compose/releases/download/v2.17.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        chmod +x /usr/local/bin/docker-compose
-        ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-        OK "Docker-compose安装完成"
-		if [ "$(uname)" == "Linux" ]; then
-        	service docker restart
+	if [ "$(uname)" == "Linux" ]; then
+		systemctl start docker
+		if [[ 0 -ne $? ]]; then
+			ERR "Docker 启动 失败"
 		fi
-    fi
+	fi
+	#
+	docker-compose --version &> /dev/null
+	if [ $? -ne  0 ]; then
+		echo "安装docker-compose..."
+		curl -s -L "https://get.daocloud.io/docker/compose/releases/download/v2.17.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+		chmod +x /usr/local/bin/docker-compose
+		ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+		OK "Docker-compose安装完成"
+		if [ "$(uname)" == "Linux" ]; then
+			service docker restart
+		fi
+	fi
 }
 
 # 检测 multipass
@@ -78,18 +78,18 @@ check_multipass() {
 		OK "安装完成 multipass"
 	fi
 	
-    if [ ! -f "/tmp/.codepass/install/focal" ]; then
-        echo "拉取镜像 ubuntu:focal..."
-        multipass launch focal --name codepass-testing
-        local list=$(multipass list | grep "codepass-testing")
-        if [ -z "$list" ]; then
-            ERR "拉取失败 ubuntu:focal"
-            exit 1
-        fi
-        multipass delete --purge codepass-testing
-        echo "1" > /tmp/.codepass/install/focal
-        OK "拉取完成 ubuntu:focal"
-    fi
+	if [ ! -f "/tmp/.codepass/install/focal" ]; then
+		echo "拉取镜像 ubuntu:focal..."
+		multipass launch focal --name codepass-testing
+		local list=$(multipass list | grep "codepass-testing")
+		if [ -z "$list" ]; then
+			ERR "拉取失败 ubuntu:focal"
+			exit 1
+		fi
+		multipass delete --purge codepass-testing
+		echo "1" > /tmp/.codepass/install/focal
+		OK "拉取完成 ubuntu:focal"
+	fi
 }
 
 # 运行脚本
@@ -111,15 +111,32 @@ CmdPath=$0
 # 全局变量
 NAME="{{.NAME}}"
 PASS="{{.PASS}}"
+
 CPUS="{{.CPUS}}"
 MEM="{{.MEM}}"
 DISK="{{.DISK}}"
 
+DOMAIN="{{.DOMAIN}}"
+KEY="{{.KEY}}"
+CRT="{{.CRT}}"
+
 # 保存状态
 STATE() {
 	echo "$1"
-    echo "$1" > /tmp/.codepass/instances/$NAME/state
+	echo "$1" > /tmp/.codepass/instances/$NAME/state
 }
+
+# 域名/证书
+if [ -n "$DOMAIN" ]; then
+	mkdir -p /tmp/.codepass/instances/$NAME/certs
+	cat > /tmp/.codepass/instances/$NAME/certs/$DOMAIN.key <<-EOF
+$KEY
+EOF
+	cat > /tmp/.codepass/instances/$NAME/certs/$DOMAIN.crt <<-EOF
+$CRT
+EOF
+	echo "$DOMAIN" > /tmp/.codepass/instances/$NAME/certs/domain
+fi
 
 # 启动虚拟机
 STATE "Launching"
@@ -145,7 +162,7 @@ mkdir -p ~/.config/code-server
 cat > ~/.config/code-server/config.yaml <<-EOF
 bind-addr: 0.0.0.0:51234
 auth: password
-password: '$PASS'
+password: $PASS
 cert: false
 EOF
 EOE

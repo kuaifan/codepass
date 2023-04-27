@@ -25,7 +25,7 @@ var startCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		r := gin.Default()
-		r.GET("/create", func(c *gin.Context) {
+		r.Any("/create", func(c *gin.Context) {
 			app.MConf.Create(c)
 		})
 		r.GET("/create/log", func(c *gin.Context) {

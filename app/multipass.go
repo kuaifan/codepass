@@ -13,8 +13,13 @@ import (
 // Create 创建实例
 func (model *MultipassModel) Create(c *gin.Context) {
 	// 参数校验
-	name := c.Query("name")
-	pass := c.Query("pass")
+	var (
+		name   = utils.GinInput(c, "name")
+		pass   = utils.GinInput(c, "pass")
+		domain = utils.GinInput(c, "domain")
+		key    = utils.GinInput(c, "key")
+		crt    = utils.GinInput(c, "crt")
+	)
 	if name == "" {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,
@@ -54,9 +59,14 @@ func (model *MultipassModel) Create(c *gin.Context) {
 	err := utils.WriteFile(cmdFile, utils.FromTemplateContent(utils.CreateExecContent, gin.H{
 		"NAME": name,
 		"PASS": pass,
+
 		"CPUS": "",
 		"MEM":  "",
 		"DISK": "",
+
+		"DOMAIN": domain,
+		"KEY":    key,
+		"CRT":    crt,
 	}))
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{

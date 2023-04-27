@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"io"
 	"math/big"
 	"math/rand"
@@ -15,6 +16,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 )
@@ -316,4 +318,12 @@ func Test(str, pattern string) bool {
 	} else {
 		return false
 	}
+}
+
+// GinInput 获取参数（优先POST、取Query）
+func GinInput(c *gin.Context, key string) string {
+	if c.PostForm(key) != "" {
+		return strings.TrimSpace(c.PostForm(key))
+	}
+	return strings.TrimSpace(c.Query(key))
 }
