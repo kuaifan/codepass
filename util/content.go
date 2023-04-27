@@ -148,8 +148,8 @@ $start
 
 # 挂载目录
 CREATE "Mounting"
-mkdir -p /tmp/.codepass/instances/$NAME/work
-multipass mount /tmp/.codepass/instances/$NAME/work $NAME:/work
+mkdir -p /tmp/.codepass/instances/$NAME/share
+multipass mount /tmp/.codepass/instances/$NAME/share $NAME:/share
 
 # 安装 code-server
 CREATE "Installing"
