@@ -116,13 +116,13 @@ MEM="{{.MEM}}"
 DISK="{{.DISK}}"
 
 # 保存状态
-STATUS() {
+STATE() {
 	echo "$1"
-    echo "$1" > /tmp/.codepass/instances/$NAME/status
+    echo "$1" > /tmp/.codepass/instances/$NAME/state
 }
 
 # 启动虚拟机
-STATUS "启动虚拟机..."
+STATE "Launching"
 start="multipass launch focal --name $NAME"
 [ -n "$CPUS" ] && start="$start --cpus $CPUS"
 [ -n "$MEM" ] && start="$start --mem $MEM"
@@ -130,16 +130,16 @@ start="multipass launch focal --name $NAME"
 $start
 
 # 挂载目录
-STATUS "挂载目录..."
+STATE "Mounting"
 mkdir -p /tmp/.codepass/instances/$NAME/work
 multipass mount /tmp/.codepass/instances/$NAME/work $NAME:/work
 
 # 安装 code-server
-STATUS "安装 code-server..."
+STATE "Installing"
 multipass exec $NAME -- sh -c 'curl -fsSL https://code-server.dev/install.sh | sh'
 
 # 初始化配置
-STATUS "初始化配置..."
+STATE "Configuring"
 multipass exec $NAME -- sh <<-EOE
 mkdir -p ~/.config/code-server
 cat > ~/.config/code-server/config.yaml <<-EOF
@@ -152,14 +152,14 @@ EOE
 multipass exec $NAME -- sudo sh -c 'echo ".card-box > .header {display:none}" >> /usr/lib/code-server/src/browser/pages/login.css'
 
 # 启动 code-server
-STATUS "启动 code-server..."
+STATE "Starting"
 multipass exec $NAME -- sudo sh -c 'systemctl enable --now code-server@ubuntu'
 
 # 保存密码
 echo "$PASS" > /tmp/.codepass/instances/$NAME/pass
 
 # 输出成功
-STATUS "Success"
+STATE "Success"
 
 # 删除脚本
 rm -f $CmdPath

@@ -95,7 +95,7 @@ func (model *MultipassModel) CreateLog(c *gin.Context) {
 		tail = 10000
 	}
 	logFile := fmt.Sprintf("/tmp/.codepass/instances/%s/launch.log", name)
-	statusFile := fmt.Sprintf("/tmp/.codepass/instances/%s/status", name)
+	stateFile := fmt.Sprintf("/tmp/.codepass/instances/%s/state", name)
 	if !utils.IsFile(logFile) {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,
@@ -108,8 +108,8 @@ func (model *MultipassModel) CreateLog(c *gin.Context) {
 		"ret": 1,
 		"msg": "读取成功",
 		"data": gin.H{
-			"status": strings.TrimSpace(utils.ReadFile(statusFile)),
-			"log":    strings.TrimSpace(logContent),
+			"state": strings.TrimSpace(utils.ReadFile(stateFile)),
+			"log":   strings.TrimSpace(logContent),
 		},
 	})
 }
@@ -147,15 +147,15 @@ func (model *MultipassModel) Info(c *gin.Context) {
 		})
 		return
 	}
-	statusFile := fmt.Sprintf("/tmp/.codepass/instances/%s/status", name)
+	stateFile := fmt.Sprintf("/tmp/.codepass/instances/%s/state", name)
 	passFile := fmt.Sprintf("/tmp/.codepass/instances/%s/pass", name)
 	c.JSON(http.StatusOK, gin.H{
 		"ret": 1,
 		"msg": "获取成功",
 		"data": gin.H{
-			"status": strings.TrimSpace(utils.ReadFile(statusFile)),
-			"pass":   strings.TrimSpace(utils.ReadFile(passFile)),
-			"info":   data.Info[name],
+			"state": strings.TrimSpace(utils.ReadFile(stateFile)),
+			"pass":  strings.TrimSpace(utils.ReadFile(passFile)),
+			"info":  data.Info[name],
 		},
 	})
 }
