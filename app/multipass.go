@@ -82,6 +82,7 @@ func (model *MultipassModel) Create(c *gin.Context) {
 	go func() {
 		_, _ = utils.Cmd("-c", fmt.Sprintf("chmod +x %s", cmdFile))
 		_, _ = utils.Cmd("-c", fmt.Sprintf("/bin/sh %s > %s", cmdFile, logFile))
+		updateDomain()
 	}()
 	//
 	c.JSON(http.StatusOK, gin.H{
@@ -105,7 +106,7 @@ func (model *MultipassModel) CreateLog(c *gin.Context) {
 		tail = 10000
 	}
 	logFile := fmt.Sprintf("/tmp/.codepass/instances/%s/launch.log", name)
-	stateFile := fmt.Sprintf("/tmp/.codepass/instances/%s/state", name)
+	createFile := fmt.Sprintf("/tmp/.codepass/instances/%s/create", name)
 	if !utils.IsFile(logFile) {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,
@@ -118,8 +119,20 @@ func (model *MultipassModel) CreateLog(c *gin.Context) {
 		"ret": 1,
 		"msg": "读取成功",
 		"data": gin.H{
-			"state": strings.TrimSpace(utils.ReadFile(stateFile)),
-			"log":   strings.TrimSpace(logContent),
+			"create": strings.TrimSpace(utils.ReadFile(createFile)),
+			"log":    strings.TrimSpace(logContent),
+		},
+	})
+}
+
+// List 获取实例列表
+func (model *MultipassModel) List(c *gin.Context) {
+	list := instancesList()
+	c.JSON(http.StatusOK, gin.H{
+		"ret": 1,
+		"msg": "获取成功",
+		"data": gin.H{
+			"list": list,
 		},
 	})
 }
@@ -157,15 +170,15 @@ func (model *MultipassModel) Info(c *gin.Context) {
 		})
 		return
 	}
-	stateFile := fmt.Sprintf("/tmp/.codepass/instances/%s/state", name)
+	createFile := fmt.Sprintf("/tmp/.codepass/instances/%s/create", name)
 	passFile := fmt.Sprintf("/tmp/.codepass/instances/%s/pass", name)
 	c.JSON(http.StatusOK, gin.H{
 		"ret": 1,
 		"msg": "获取成功",
 		"data": gin.H{
-			"state": strings.TrimSpace(utils.ReadFile(stateFile)),
-			"pass":  strings.TrimSpace(utils.ReadFile(passFile)),
-			"info":  data.Info[name],
+			"create": strings.TrimSpace(utils.ReadFile(createFile)),
+			"pass":   strings.TrimSpace(utils.ReadFile(passFile)),
+			"info":   data.Info[name],
 		},
 	})
 }
@@ -184,6 +197,7 @@ func (model *MultipassModel) Delete(c *gin.Context) {
 	_, _ = utils.Cmd("-c", fmt.Sprintf("multipass umount %s", name))            // 取消目录挂载
 	_, _ = utils.Cmd("-c", fmt.Sprintf("rm -rf %s", dirPath))                   // 删除实例目录
 	_, err := utils.Cmd("-c", fmt.Sprintf("multipass delete --purge %s", name)) // 删除实例
+	updateDomain()
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,

@@ -31,6 +31,9 @@ var startCmd = &cobra.Command{
 		r.GET("/create/log", func(c *gin.Context) {
 			app.MConf.CreateLog(c)
 		})
+		r.GET("/list", func(c *gin.Context) {
+			app.MConf.List(c)
+		})
 		r.GET("/info", func(c *gin.Context) {
 			app.MConf.Info(c)
 		})
