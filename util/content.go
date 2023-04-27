@@ -182,6 +182,92 @@ CREATE "Success"
 rm -f $CmdPath
 `)
 
+// NginxDefaultConf nginx 默认配置
+const NginxDefaultConf = string(`
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+map $http_host $this_host {
+    "" $host;
+    default $http_host;
+}
+map $http_x_forwarded_proto $the_scheme {
+     default $http_x_forwarded_proto;
+     "" $scheme;
+}
+map $http_x_forwarded_host $the_host {
+    default $http_x_forwarded_host;
+    "" $this_host;
+}
+`)
+
+// NginxDomainConf nginx 域名配置
+const NginxDomainConf = string(`
+# {{.NAME}}
+# {{.IP}}
+# {{.DOMAIN}}
+
+upstream server_{{.NAME}} {
+    server {{.IP}}:51234 weight=5 max_fails=3 fail_timeout=30s;
+    keepalive 16;
+}
+
+server {
+    listen 80;
+    server_name {{.DOMAIN}};
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name {{.DOMAIN}};
+
+    ssl on;
+    ssl_certificate      /instances/{{.NAME}}/certs/{{.DOMAIN}}.crt;
+    ssl_certificate_key  /instances/{{.NAME}}/certs/{{.DOMAIN}}.key;
+    
+    ssl_session_timeout  5m;
+    ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_prefer_server_ciphers on;
+
+    location / {
+		proxy_http_version 1.1;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Real-PORT $remote_port;
+        proxy_set_header X-Forwarded-Host $the_host;
+        proxy_set_header X-Forwarded-Proto $the_scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_set_header Scheme $scheme;
+        proxy_set_header Server-Protocol $server_protocol;
+        proxy_set_header Server-Name $server_name;
+        proxy_set_header Server-Addr $server_addr;
+        proxy_set_header Server-Port $server_port;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_pass http://server_{{.NAME}};
+    }
+}
+`)
+
+// DockerComposeContent docker-compose 配置
+const DockerComposeContent = string(`
+version: '3'
+
+services:
+  nginx:
+    image: "nginx:alpine"
+    ports:
+      - "1180:80"
+      - "11443:443"
+    volumes:
+      - /tmp/.codepass/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - /tmp/.codepass/instances:/instances
+    restart: unless-stopped
+`)
+
 // FromTemplateContent 从模板中获取内容
 func FromTemplateContent(templateContent string, envMap map[string]interface{}) string {
 	tmpl, err := template.New("text").Parse(templateContent)

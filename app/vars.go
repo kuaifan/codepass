@@ -105,6 +105,30 @@ func instancesBase(entry *instanceModel) *instanceModel {
 }
 
 // 更新域名
-func updateDomain() {
-
+func updateDomain() error {
+	var list []string
+	list = append(list, utils.NginxDefaultConf)
+	for _, entry := range instancesList() {
+		if entry.Ip != "" && entry.Domain != "" {
+			list = append(list, utils.FromTemplateContent(utils.NginxDomainConf, map[string]any{
+				"NAME":   entry.Name,
+				"DOMAIN": entry.Domain,
+				"IP":     entry.Ip,
+			}))
+		}
+	}
+	err := utils.WriteFile("/tmp/.codepass/nginx/default.conf", strings.Join(list, "\n"))
+	if err != nil {
+		return err
+	}
+	err = utils.WriteFile("/tmp/.codepass/docker/docker-compose.yml", utils.DockerComposeContent)
+	if err != nil {
+		return err
+	}
+	_, _ = utils.Cmd("-c", "docker-compose -f /tmp/.codepass/docker/docker-compose.yml down")
+	_, err = utils.Cmd("-c", "docker-compose -f /tmp/.codepass/docker/docker-compose.yml up -d --remove-orphans")
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -40,6 +40,9 @@ var startCmd = &cobra.Command{
 		r.GET("/delete", func(c *gin.Context) {
 			app.MConf.Delete(c)
 		})
+		r.GET("/domain/update", func(c *gin.Context) {
+			app.MConf.DomainUpdate(c)
+		})
 		_ = r.Run(fmt.Sprintf("%s:%s", app.MConf.Ip, app.MConf.Port))
 	},
 }

@@ -56,7 +56,7 @@ func (model *MultipassModel) Create(c *gin.Context) {
 	// 生成创建脚本
 	cmdFile := fmt.Sprintf("/tmp/.codepass/instances/%s/launch.sh", name)
 	logFile := fmt.Sprintf("/tmp/.codepass/instances/%s/launch.log", name)
-	err := utils.WriteFile(cmdFile, utils.FromTemplateContent(utils.CreateExecContent, gin.H{
+	err := utils.WriteFile(cmdFile, utils.FromTemplateContent(utils.CreateExecContent, map[string]any{
 		"NAME": name,
 		"PASS": pass,
 
@@ -82,7 +82,7 @@ func (model *MultipassModel) Create(c *gin.Context) {
 	go func() {
 		_, _ = utils.Cmd("-c", fmt.Sprintf("chmod +x %s", cmdFile))
 		_, _ = utils.Cmd("-c", fmt.Sprintf("/bin/sh %s > %s", cmdFile, logFile))
-		updateDomain()
+		_ = updateDomain()
 	}()
 	//
 	c.JSON(http.StatusOK, gin.H{
@@ -197,7 +197,7 @@ func (model *MultipassModel) Delete(c *gin.Context) {
 	_, _ = utils.Cmd("-c", fmt.Sprintf("multipass umount %s", name))            // 取消目录挂载
 	_, _ = utils.Cmd("-c", fmt.Sprintf("rm -rf %s", dirPath))                   // 删除实例目录
 	_, err := utils.Cmd("-c", fmt.Sprintf("multipass delete --purge %s", name)) // 删除实例
-	updateDomain()
+	_ = updateDomain()
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,
@@ -211,5 +211,24 @@ func (model *MultipassModel) Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"ret": 1,
 		"msg": "实例删除成功",
+	})
+}
+
+// DomainUpdate 更新域名
+func (model *MultipassModel) DomainUpdate(c *gin.Context) {
+	err := updateDomain()
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"ret": 0,
+			"msg": "更新失败",
+			"data": gin.H{
+				"err": err.Error(),
+			},
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"ret": 1,
+		"msg": "更新成功",
 	})
 }
