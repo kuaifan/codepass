@@ -2,6 +2,7 @@ package app
 
 import (
 	utils "codepass/util"
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -109,6 +110,52 @@ func (model *MultipassModel) CreateLog(c *gin.Context) {
 		"data": gin.H{
 			"status": strings.TrimSpace(utils.ReadFile(statusFile)),
 			"log":    strings.TrimSpace(logContent),
+		},
+	})
+}
+
+// Info 查看实例信息
+func (model *MultipassModel) Info(c *gin.Context) {
+	name := c.Query("name")
+	dirPath := fmt.Sprintf("/tmp/.codepass/instances/%s", name)
+	if !utils.IsDir(dirPath) {
+		c.JSON(http.StatusOK, gin.H{
+			"ret": 0,
+			"msg": "实例不存在",
+		})
+		return
+	}
+	result, err := utils.Cmd("-c", fmt.Sprintf("multipass info %s --format json", name))
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"ret": 0,
+			"msg": "获取失败",
+			"data": gin.H{
+				"err": err.Error(),
+			},
+		})
+		return
+	}
+	var data infoModel
+	if err = json.Unmarshal([]byte(result), &data); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"ret": 0,
+			"msg": "解析失败",
+			"data": gin.H{
+				"err": err.Error(),
+			},
+		})
+		return
+	}
+	statusFile := fmt.Sprintf("/tmp/.codepass/instances/%s/status", name)
+	passFile := fmt.Sprintf("/tmp/.codepass/instances/%s/pass", name)
+	c.JSON(http.StatusOK, gin.H{
+		"ret": 1,
+		"msg": "获取成功",
+		"data": gin.H{
+			"status": strings.TrimSpace(utils.ReadFile(statusFile)),
+			"pass":   strings.TrimSpace(utils.ReadFile(passFile)),
+			"info":   data.Info[name],
 		},
 	})
 }

@@ -155,14 +155,14 @@ multipass exec $NAME -- sudo sh -c 'echo ".card-box > .header {display:none}" >>
 STATUS "启动 code-server..."
 multipass exec $NAME -- sudo sh -c 'systemctl enable --now code-server@ubuntu'
 
-# 删除脚本
-rm -f $CmdPath
-
 # 保存密码
 echo "$PASS" > /tmp/.codepass/instances/$NAME/pass
 
 # 输出成功
-STATUS "success"
+STATUS "Success"
+
+# 删除脚本
+rm -f $CmdPath
 `)
 
 // FromTemplateContent 从模板中获取内容
