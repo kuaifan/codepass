@@ -113,8 +113,8 @@ NAME="{{.NAME}}"
 PASS="{{.PASS}}"
 
 CPUS="{{.CPUS}}"
-MEM="{{.MEM}}"
 DISK="{{.DISK}}"
+MEMORY="{{.MEMORY}}"
 
 # 保存状态
 CREATE() {
@@ -126,8 +126,8 @@ CREATE() {
 CREATE "Launching"
 start="multipass launch focal --name $NAME"
 [ -n "$CPUS" ] && start="$start --cpus $CPUS"
-[ -n "$MEM" ] && start="$start --mem $MEM"
 [ -n "$DISK" ] && start="$start --disk $DISK"
+[ -n "$MEMORY" ] && start="$start --memory $MEMORY"
 $start
 
 # 安装 code-server
