@@ -40,7 +40,7 @@ func (model *MultipassModel) Create(c *gin.Context) {
 		return
 	}
 	// 检测实例是否已存在
-	dirPath := fmt.Sprintf("/tmp/.codepass/instances/%s", name)
+	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/instances/%s", name))
 	if utils.IsDir(dirPath) {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,
@@ -49,9 +49,9 @@ func (model *MultipassModel) Create(c *gin.Context) {
 		return
 	}
 	// 生成创建脚本
-	cmdFile := fmt.Sprintf("/tmp/.codepass/instances/%s/launch.sh", name)
-	logFile := fmt.Sprintf("/tmp/.codepass/instances/%s/launch.log", name)
-	err := utils.WriteFile(cmdFile, utils.FromTemplateContent(utils.CreateExecContent, map[string]any{
+	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/instances/%s/launch.sh", name))
+	logFile := utils.RunDir(fmt.Sprintf("/.codepass/instances/%s/launch.log", name))
+	err := utils.WriteFile(cmdFile, utils.TemplateContent(utils.CreateExecContent, map[string]any{
 		"NAME": name,
 		"PASS": pass,
 
@@ -96,8 +96,8 @@ func (model *MultipassModel) CreateLog(c *gin.Context) {
 	if tail > 10000 {
 		tail = 10000
 	}
-	logFile := fmt.Sprintf("/tmp/.codepass/instances/%s/launch.log", name)
-	createFile := fmt.Sprintf("/tmp/.codepass/instances/%s/create", name)
+	logFile := utils.RunDir(fmt.Sprintf("/.codepass/instances/%s/launch.log", name))
+	createFile := utils.RunDir(fmt.Sprintf("/.codepass/instances/%s/create", name))
 	if !utils.IsFile(logFile) {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,
@@ -145,9 +145,9 @@ func (model *MultipassModel) CertSave(c *gin.Context) {
 		return
 	}
 	// 保存证书
-	err1 := utils.WriteFile("/tmp/.codepass/nginx/cert/domain", domain)
-	err2 := utils.WriteFile("/tmp/.codepass/nginx/cert/key", key)
-	err3 := utils.WriteFile("/tmp/.codepass/nginx/cert/crt", crt)
+	err1 := utils.WriteFile(utils.RunDir("/.codepass/nginx/cert/domain"), domain)
+	err2 := utils.WriteFile(utils.RunDir("/.codepass/nginx/cert/key"), key)
+	err3 := utils.WriteFile(utils.RunDir("/.codepass/nginx/cert/crt"), crt)
 	if err1 != nil || err2 != nil || err3 != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,
@@ -183,7 +183,7 @@ func (model *MultipassModel) List(c *gin.Context) {
 // Info 查看实例信息
 func (model *MultipassModel) Info(c *gin.Context) {
 	name := c.Query("name")
-	dirPath := fmt.Sprintf("/tmp/.codepass/instances/%s", name)
+	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/instances/%s", name))
 	if !utils.IsDir(dirPath) {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,
@@ -213,8 +213,8 @@ func (model *MultipassModel) Info(c *gin.Context) {
 		})
 		return
 	}
-	createFile := fmt.Sprintf("/tmp/.codepass/instances/%s/create", name)
-	passFile := fmt.Sprintf("/tmp/.codepass/instances/%s/pass", name)
+	createFile := utils.RunDir(fmt.Sprintf("/.codepass/instances/%s/create", name))
+	passFile := utils.RunDir(fmt.Sprintf("/.codepass/instances/%s/pass", name))
 	c.JSON(http.StatusOK, gin.H{
 		"ret": 1,
 		"msg": "获取成功",
@@ -229,7 +229,7 @@ func (model *MultipassModel) Info(c *gin.Context) {
 // Delete 删除实例
 func (model *MultipassModel) Delete(c *gin.Context) {
 	name := c.Query("name")
-	dirPath := fmt.Sprintf("/tmp/.codepass/instances/%s", name)
+	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/instances/%s", name))
 	if !utils.IsDir(dirPath) {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,

@@ -346,3 +346,9 @@ func GetProtsConfig() (string, string) {
 	}
 	return httpPort, httpsPort
 }
+
+// RunDir 前面加上绝对路径
+func RunDir(path string) string {
+	wd, _ := os.Getwd()
+	return fmt.Sprintf("%s%s", wd, path)
+}

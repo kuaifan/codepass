@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"os"
+	"time"
 )
 
 var startCmd = &cobra.Command{
@@ -20,6 +21,11 @@ var startCmd = &cobra.Command{
 		_, err := utils.Cmd("-c", "multipass version")
 		if err != nil {
 			utils.PrintError("未安装 multipass")
+			os.Exit(1)
+		}
+		err = utils.WriteFile(utils.RunDir("/.codepass/start"), utils.FormatYmdHis(time.Now()))
+		if err != nil {
+			utils.PrintError("无法写入文件")
 			os.Exit(1)
 		}
 	},

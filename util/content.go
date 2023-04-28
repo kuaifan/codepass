@@ -78,7 +78,7 @@ check_multipass() {
 		OK "安装完成 multipass"
 	fi
 	
-	if [ ! -f "/tmp/.codepass/install/focal" ]; then
+	if [ ! -f "{{.RUN_PATH}}/.codepass/install/focal" ]; then
 		echo "拉取镜像 ubuntu:focal..."
 		multipass launch focal --name codepass-testing
 		local list=$(multipass list | grep "codepass-testing")
@@ -87,7 +87,7 @@ check_multipass() {
 			exit 1
 		fi
 		multipass delete --purge codepass-testing
-		echo "1" > /tmp/.codepass/install/focal
+		echo "1" > {{.RUN_PATH}}/.codepass/install/focal
 		OK "拉取完成 ubuntu:focal"
 	fi
 }
@@ -119,7 +119,7 @@ DISK="{{.DISK}}"
 # 保存状态
 CREATE() {
 	echo "$1"
-	echo "$1" > /tmp/.codepass/instances/$NAME/create
+	echo "$1" > {{.RUN_PATH}}/.codepass/instances/$NAME/create
 }
 
 # 启动虚拟机
@@ -130,11 +130,6 @@ start="multipass launch focal --name $NAME"
 [ -n "$DISK" ] && start="$start --disk $DISK"
 $start
 
-# 挂载目录
-CREATE "Mounting"
-mkdir -p /tmp/.codepass/instances/$NAME/wwwroot
-multipass mount /tmp/.codepass/instances/$NAME/wwwroot $NAME:/wwwroot
-
 # 安装 code-server
 CREATE "Installing"
 multipass exec $NAME -- sh -c 'curl -fsSL https://code-server.dev/install.sh | sh'
@@ -143,6 +138,7 @@ multipass exec $NAME -- sh -c 'curl -fsSL https://code-server.dev/install.sh | s
 CREATE "Configuring"
 multipass exec $NAME -- sh <<-EOE
 mkdir -p ~/.config/code-server
+mkdir -p ~/wwwroot
 cat > ~/.config/code-server/config.yaml <<-EOF
 bind-addr: 0.0.0.0:8080
 auth: password
@@ -157,7 +153,7 @@ CREATE "Starting"
 multipass exec $NAME -- sudo sh -c 'systemctl enable --now code-server@ubuntu'
 
 # 保存密码
-echo "$PASS" > /tmp/.codepass/instances/$NAME/pass
+echo "$PASS" > {{.RUN_PATH}}/.codepass/instances/$NAME/pass
 
 # 输出成功
 CREATE "Success"
@@ -249,13 +245,13 @@ services:
       - "{{.HTTP_PORT}}:80"
       - "{{.HTTPS_PORT}}:443"
     volumes:
-      - /tmp/.codepass/nginx/cert:/etc/nginx/cert
-      - /tmp/.codepass/nginx/conf.d:/etc/nginx/conf.d
+      - {{.RUN_PATH}}/.codepass/nginx/cert:/etc/nginx/cert
+      - {{.RUN_PATH}}/.codepass/nginx/conf.d:/etc/nginx/conf.d
     restart: unless-stopped
 `)
 
-// FromTemplateContent 从模板中获取内容
-func FromTemplateContent(templateContent string, envMap map[string]interface{}) string {
+// TemplateContent 从模板中获取内容
+func TemplateContent(templateContent string, envMap map[string]interface{}) string {
 	tmpl, err := template.New("text").Parse(templateContent)
 	defer func() {
 		if r := recover(); r != nil {
@@ -265,6 +261,7 @@ func FromTemplateContent(templateContent string, envMap map[string]interface{}) 
 	if err != nil {
 		panic(1)
 	}
+	envMap["RUN_PATH"] = RunDir("")
 	var buffer bytes.Buffer
 	_ = tmpl.Execute(&buffer, envMap)
 	return string(buffer.Bytes())
