@@ -320,7 +320,7 @@ func Test(str, pattern string) bool {
 	}
 }
 
-// GinInput 获取参数（优先POST、取Query）
+// GinInput Gin获取参数（优先POST、取Query）
 func GinInput(c *gin.Context, key string) string {
 	if c.PostForm(key) != "" {
 		return strings.TrimSpace(c.PostForm(key))

@@ -32,9 +32,7 @@ type instanceModel struct {
 	Create string `json:"create"`
 	Pass   string `json:"pass"`
 
-	Domain   string `json:"domain"`
-	KeyPath  string `json:"key_path"`
-	CertPath string `json:"cert_path"`
+	Domain string `json:"domain"`
 }
 
 var (
@@ -52,7 +50,7 @@ func instancesList() []*instanceModel {
 		return nil
 	}
 	for _, entry := range data.List {
-		instancesBase(entry)
+		instanceBase(entry)
 	}
 	//
 	dirEntry, err := os.ReadDir("/tmp/.codepass/instances")
@@ -70,7 +68,7 @@ func instancesList() []*instanceModel {
 				}
 			}
 			if !exist {
-				data.List = append(data.List, instancesBase(&instanceModel{
+				data.List = append(data.List, instanceBase(&instanceModel{
 					Name: name,
 				}))
 			}
@@ -80,17 +78,8 @@ func instancesList() []*instanceModel {
 }
 
 // 获取实例基本信息
-func instancesBase(entry *instanceModel) *instanceModel {
+func instanceBase(entry *instanceModel) *instanceModel {
 	name := entry.Name
-	domainAddr := ""
-	domainKey := ""
-	domainCert := ""
-	domainFile := fmt.Sprintf("/tmp/.codepass/instances/%s/certs/domain", name)
-	if utils.IsFile(domainFile) {
-		domainAddr = strings.TrimSpace(utils.ReadFile(domainFile))
-		domainKey = fmt.Sprintf("/tmp/.codepass/instances/%s/certs/%s.key", name, name)
-		domainCert = fmt.Sprintf("/tmp/.codepass/instances/%s/certs/%s.crt", name, name)
-	}
 	createFile := fmt.Sprintf("/tmp/.codepass/instances/%s/create", name)
 	passFile := fmt.Sprintf("/tmp/.codepass/instances/%s/pass", name)
 	if len(entry.Ipv4) > 0 {
@@ -98,13 +87,20 @@ func instancesBase(entry *instanceModel) *instanceModel {
 	}
 	entry.Create = strings.TrimSpace(utils.ReadFile(createFile))
 	entry.Pass = strings.TrimSpace(utils.ReadFile(passFile))
-	entry.Domain = domainAddr
-	entry.KeyPath = domainKey
-	entry.CertPath = domainCert
+	entry.Domain = instanceDomain(name)
 	return entry
 }
 
-// 更新域名
+// 获取实例域名
+func instanceDomain(name string) string {
+	domainFile := "/tmp/.codepass/nginx/cert/domain"
+	if utils.IsFile(domainFile) {
+		return fmt.Sprintf("https://%s-code.%s", name, strings.TrimSpace(utils.ReadFile(domainFile)))
+	}
+	return ""
+}
+
+// 更新实例域名
 func updateDomain() error {
 	var list []string
 	list = append(list, utils.NginxDefaultConf)

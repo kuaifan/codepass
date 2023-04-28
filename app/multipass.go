@@ -13,13 +13,8 @@ import (
 // Create 创建实例
 func (model *MultipassModel) Create(c *gin.Context) {
 	// 参数校验
-	var (
-		name   = utils.GinInput(c, "name")
-		pass   = utils.GinInput(c, "pass")
-		domain = utils.GinInput(c, "domain")
-		key    = utils.GinInput(c, "key")
-		crt    = utils.GinInput(c, "crt")
-	)
+	name := c.Query("name")
+	pass := c.Query("pass")
 	if name == "" {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,
@@ -63,10 +58,6 @@ func (model *MultipassModel) Create(c *gin.Context) {
 		"CPUS": "",
 		"MEM":  "",
 		"DISK": "",
-
-		"DOMAIN": domain,
-		"KEY":    key,
-		"CRT":    crt,
 	}))
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -122,6 +113,58 @@ func (model *MultipassModel) CreateLog(c *gin.Context) {
 			"create": strings.TrimSpace(utils.ReadFile(createFile)),
 			"log":    strings.TrimSpace(logContent),
 		},
+	})
+}
+
+// CertSave 保存证书
+func (model *MultipassModel) CertSave(c *gin.Context) {
+	var (
+		domain = utils.GinInput(c, "domain")
+		key    = utils.GinInput(c, "key")
+		crt    = utils.GinInput(c, "crt")
+	)
+	if domain == "" {
+		c.JSON(http.StatusOK, gin.H{
+			"ret": 0,
+			"msg": "域名不能为空",
+		})
+		return
+	}
+	if key == "" {
+		c.JSON(http.StatusOK, gin.H{
+			"ret": 0,
+			"msg": "私钥不能为空",
+		})
+		return
+	}
+	if crt == "" {
+		c.JSON(http.StatusOK, gin.H{
+			"ret": 0,
+			"msg": "证书不能为空",
+		})
+		return
+	}
+	// 保存证书
+	err1 := utils.WriteFile("/tmp/.codepass/nginx/cert/domain", domain)
+	err2 := utils.WriteFile("/tmp/.codepass/nginx/cert/key", key)
+	err3 := utils.WriteFile("/tmp/.codepass/nginx/cert/crt", crt)
+	if err1 != nil || err2 != nil || err3 != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"ret": 0,
+			"msg": "保存证书失败",
+			"data": gin.H{
+				"err1": err1.Error(),
+				"err2": err2.Error(),
+				"err3": err3.Error(),
+			},
+		})
+		return
+	}
+	_ = updateDomain()
+	//
+	c.JSON(http.StatusOK, gin.H{
+		"ret": 1,
+		"msg": "保存证书成功",
 	})
 }
 

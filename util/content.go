@@ -116,27 +116,11 @@ CPUS="{{.CPUS}}"
 MEM="{{.MEM}}"
 DISK="{{.DISK}}"
 
-DOMAIN="{{.DOMAIN}}"
-KEY="{{.KEY}}"
-CRT="{{.CRT}}"
-
 # 保存状态
 CREATE() {
 	echo "$1"
 	echo "$1" > /tmp/.codepass/instances/$NAME/create
 }
-
-# 域名/证书
-if [ -n "$DOMAIN" ]; then
-	mkdir -p /tmp/.codepass/instances/$NAME/certs
-	cat > /tmp/.codepass/instances/$NAME/certs/$DOMAIN.key <<-EOF
-$KEY
-EOF
-	cat > /tmp/.codepass/instances/$NAME/certs/$DOMAIN.crt <<-EOF
-$CRT
-EOF
-	echo "$DOMAIN" > /tmp/.codepass/instances/$NAME/certs/domain
-fi
 
 # 启动虚拟机
 CREATE "Launching"
@@ -222,8 +206,8 @@ server {
 		rewrite ^(/.*)$ https://$host$1 permanent;
 	}
 
-	ssl_certificate /instances/{{.NAME}}/certs/{{.DOMAIN}}.crt;
-	ssl_certificate_key /instances/{{.NAME}}/certs/{{.DOMAIN}}.key;
+	ssl_certificate /etc/nginx/cert/crt;
+	ssl_certificate_key /etc/nginx/cert/key;
 	
 	ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
 	ssl_ciphers EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
@@ -262,8 +246,8 @@ services:
       - "1180:80"
       - "11443:443"
     volumes:
+      - /tmp/.codepass/nginx/cert:/etc/nginx/cert
       - /tmp/.codepass/nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - /tmp/.codepass/instances:/instances
     restart: unless-stopped
 `)
 
