@@ -140,7 +140,7 @@ multipass exec $NAME -- sh <<-EOE
 mkdir -p ~/.config/code-server
 mkdir -p ~/wwwroot
 cat > ~/.config/code-server/config.yaml <<-EOF
-bind-addr: 0.0.0.0:8080
+bind-addr: 0.0.0.0:55123
 auth: password
 password: $PASS
 cert: false
@@ -189,7 +189,7 @@ const NginxDomainConf = string(`
 # {{.DOMAIN}}
 
 upstream server_{{.NAME}} {
-	server {{.IP}}:8080 weight=5 max_fails=3 fail_timeout=30s;
+	server {{.IP}}:55123 weight=5 max_fails=3 fail_timeout=30s;
 	keepalive 16;
 }
 
