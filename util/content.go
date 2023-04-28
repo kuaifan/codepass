@@ -132,8 +132,8 @@ $start
 
 # 挂载目录
 CREATE "Mounting"
-mkdir -p /tmp/.codepass/instances/$NAME/share
-multipass mount /tmp/.codepass/instances/$NAME/share $NAME:/share
+mkdir -p /tmp/.codepass/instances/$NAME/wwwroot
+multipass mount /tmp/.codepass/instances/$NAME/wwwroot $NAME:/wwwroot
 
 # 安装 code-server
 CREATE "Installing"
@@ -144,7 +144,7 @@ CREATE "Configuring"
 multipass exec $NAME -- sh <<-EOE
 mkdir -p ~/.config/code-server
 cat > ~/.config/code-server/config.yaml <<-EOF
-bind-addr: 0.0.0.0:51234
+bind-addr: 0.0.0.0:8080
 auth: password
 password: $PASS
 cert: false
@@ -193,7 +193,7 @@ const NginxDomainConf = string(`
 # {{.DOMAIN}}
 
 upstream server_{{.NAME}} {
-	server {{.IP}}:51234 weight=5 max_fails=3 fail_timeout=30s;
+	server {{.IP}}:8080 weight=5 max_fails=3 fail_timeout=30s;
 	keepalive 16;
 }
 
@@ -237,17 +237,20 @@ server {
 
 // DockerComposeContent docker-compose 配置
 const DockerComposeContent = string(`
+# {{.HTTP_PORT}}
+# {{.HTTPS_PORT}}
+
 version: '3'
 
 services:
   nginx:
     image: "nginx:alpine"
     ports:
-      - "1180:80"
-      - "11443:443"
+      - "{{.HTTP_PORT}}:80"
+      - "{{.HTTPS_PORT}}:443"
     volumes:
       - /tmp/.codepass/nginx/cert:/etc/nginx/cert
-      - /tmp/.codepass/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - /tmp/.codepass/nginx/conf.d:/etc/nginx/conf.d
     restart: unless-stopped
 `)
 

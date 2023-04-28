@@ -33,6 +33,7 @@ type instanceModel struct {
 	Pass   string `json:"pass"`
 
 	Domain string `json:"domain"`
+	Url    string `json:"url"`
 }
 
 var (
@@ -87,17 +88,23 @@ func instanceBase(entry *instanceModel) *instanceModel {
 	}
 	entry.Create = strings.TrimSpace(utils.ReadFile(createFile))
 	entry.Pass = strings.TrimSpace(utils.ReadFile(passFile))
-	entry.Domain = instanceDomain(name)
+	entry.Domain, entry.Url = instanceDomain(name)
 	return entry
 }
 
 // 获取实例域名
-func instanceDomain(name string) string {
+func instanceDomain(name string) (string, string) {
 	domainFile := "/tmp/.codepass/nginx/cert/domain"
 	if utils.IsFile(domainFile) {
-		return fmt.Sprintf("https://%s-code.%s", name, strings.TrimSpace(utils.ReadFile(domainFile)))
+		domainAddr := fmt.Sprintf("%s-code.%s", name, strings.TrimSpace(utils.ReadFile(domainFile)))
+		_, httpsPort := utils.GetProtsConfig()
+		if httpsPort == "443" {
+			return domainAddr, fmt.Sprintf("https://%s", domainAddr)
+		} else {
+			return domainAddr, fmt.Sprintf("https://%s:%s", domainAddr, httpsPort)
+		}
 	}
-	return ""
+	return "", ""
 }
 
 // 更新实例域名
@@ -113,11 +120,16 @@ func updateDomain() error {
 			}))
 		}
 	}
-	err := utils.WriteFile("/tmp/.codepass/nginx/default.conf", strings.Join(list, "\n"))
+	err := utils.WriteFile("/tmp/.codepass/nginx/conf.d/default.conf", strings.Join(list, "\n"))
 	if err != nil {
 		return err
 	}
-	err = utils.WriteFile("/tmp/.codepass/docker/docker-compose.yml", utils.DockerComposeContent)
+	//
+	httpPort, httpsPort := utils.GetProtsConfig()
+	err = utils.WriteFile("/tmp/.codepass/docker/docker-compose.yml", utils.FromTemplateContent(utils.DockerComposeContent, map[string]any{
+		"HTTP_PORT":  httpPort,
+		"HTTPS_PORT": httpsPort,
+	}))
 	if err != nil {
 		return err
 	}
