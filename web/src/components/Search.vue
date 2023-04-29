@@ -7,7 +7,7 @@
                         <n-icon :component="SearchOutline"/>
                     </template>
                 </n-input>
-                <div class="reload" @click="loadIng=!loadIng">
+                <div class="reload" @click="onLoad">
                     <Loading v-if="loadIng"/>
                     <n-icon v-else>
                         <reload/>
@@ -95,6 +95,8 @@ import {defineComponent, ref, h} from "vue";
 import {SearchOutline, AddOutline, Reload} from "@vicons/ionicons5";
 import Loading from "./Loading.vue";
 import Create from "./Create.vue";
+import {useMessage} from "naive-ui";
+import call from "../call.js";
 
 export default defineComponent({
     components: {
@@ -108,11 +110,30 @@ export default defineComponent({
         }
     },
     setup() {
+        const message = useMessage()
+        const loadIng = ref(false);
         return {
-            loadIng: ref(false),
+            loadIng,
             showModal: ref(false),
             addIcon() {
                 return h(AddOutline);
+            },
+            onLoad() {
+                if (loadIng.value) {
+                    return
+                }
+                loadIng.value = true
+                //
+                call({
+                    method: "get",
+                    url: 'list',
+                }).then(res => {
+                    console.log(res)
+                }).catch(err => {
+                    console.log(err)
+                }).finally(() => {
+                    loadIng.value = false
+                })
             }
         };
     }
