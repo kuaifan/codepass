@@ -1,8 +1,8 @@
 <template>
     <div class="banner">
         <div class="wrapper">
-            <div class="title">Workspaces</div>
-            <div class="sub-title">Manage recent and stopped workspaces.</div>
+            <div class="title">工作区</div>
+            <div class="sub-title">管理最近和停止的工作区</div>
         </div>
     </div>
 </template>
@@ -21,13 +21,13 @@
 
         .title {
             font-weight: 700;
-            font-size: 48px;
+            font-size: 42px;
             line-height: 64px;
         }
 
         .sub-title {
             font-size: 16px;
-            line-height: 24px;
+            line-height: 28px;
         }
     }
 

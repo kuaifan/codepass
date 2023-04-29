@@ -8,23 +8,23 @@
             label-width="auto"
             require-mark-placement="right-hanging">
         <n-form-item path="name" label="名称">
-            <n-input v-model:value="formData.name" placeholder="请输入实例名称"/>
+            <n-input v-model:value="formData.name" placeholder="请输入工作区名称"/>
         </n-form-item>
         <n-form-item path="cpus" label="CPU">
-            <n-input v-model:value="formData.cpus" placeholder="请输入实例名称">
+            <n-input v-model:value="formData.cpus" placeholder="请输入CPU核数">
                 <template #suffix>
                     核
                 </template>
             </n-input>
         </n-form-item>
         <n-form-item path="memory" label="内存">
-            <n-input v-model:value="formData.memory" placeholder="请输入实例名称">
+            <n-input v-model:value="formData.memory" placeholder="请输入内存大小">
                 <template #suffix>
                     GB
                 </template>
             </n-input>
         </n-form-item>
-        <n-form-item path="disk" label="磁盘" placeholder="请输入实例名称">
+        <n-form-item path="disk" label="磁盘" placeholder="请输入磁盘大小">
             <n-input v-model:value="formData.disk">
                 <template #suffix>
                     GB
@@ -48,8 +48,9 @@ import {defineComponent, ref} from 'vue'
 import {
     FormInst,
     FormItemRule,
-    FormRules
+    FormRules, useMessage
 } from 'naive-ui'
+import call from "../call.js";
 
 interface ModelType {
     name: string | null
@@ -63,6 +64,8 @@ export default defineComponent({
         onCreate: () => true,
     },
     setup(props, {emit}) {
+        const message = useMessage()
+        const loadIng = ref<boolean>(false)
         const formRef = ref<FormInst | null>(null)
         const formData = ref<ModelType>({
             name: null,
@@ -126,6 +129,7 @@ export default defineComponent({
             ],
         }
         return {
+            loadIng,
             formRef,
             formData,
             formRules,
@@ -135,9 +139,23 @@ export default defineComponent({
                     if (errors) {
                         return;
                     }
-                    // todo 提交
-                    console.log(formData);
-                    emit("onCreate")
+                    //
+                    if (loadIng.value) {
+                        return
+                    }
+                    loadIng.value = true
+                    call({
+                        method: "get",
+                        url: 'create',
+                        data: formData.value
+                    }).then(({msg}) => {
+                        message.success(msg);
+                        emit('close')
+                    }).catch(({msg}) => {
+                        message.error(msg);
+                    }).finally(() => {
+                        loadIng.value = false
+                    })
                 })
             }
         }

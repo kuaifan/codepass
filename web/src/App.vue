@@ -4,10 +4,7 @@
             <n-notification-provider>
                 <n-dialog-provider>
                     <n-config-provider :theme="darkTheme">
-                        <Header/>
-                        <Banner/>
-                        <Search/>
-                        <List/>
+                        <Workspaces/>
                         <n-global-style/>
                     </n-config-provider>
                 </n-dialog-provider>
@@ -20,17 +17,11 @@
 import {defineComponent} from "vue";
 import {darkTheme} from 'naive-ui'
 
-import Header from "./components/Header.vue";
-import Banner from "./components/Banner.vue";
-import Search from "./components/Search.vue";
-import List from "./components/List.vue";
+import Workspaces from "./pages/Workspaces.vue";
 
 export default defineComponent({
     components: {
-        Header,
-        Banner,
-        Search,
-        List,
+        Workspaces,
     },
     setup() {
         return {

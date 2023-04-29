@@ -2,7 +2,7 @@
     <n-layout-header class="header" bordered>
         <div class="wrapper">
             <n-button tertiary round>
-                Workspaces
+                工作区管理
             </n-button>
             <div class="user">
                 <n-button
@@ -31,7 +31,7 @@
                     size="huge"
                     closable
                     @close="showModal=false">
-                <Domain/>
+                <Domain @close="showModal=false"/>
             </n-card>
         </n-modal>
     </n-layout-header>

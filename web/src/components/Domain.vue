@@ -24,7 +24,7 @@
         <n-row :gutter="[0, 24]">
             <n-col :span="24">
                 <div style="display:flex; justify-content:flex-end">
-                    <n-button round type="primary" @click="handleSubmit">
+                    <n-button round type="primary" :loading="loadIng" @click="handleSubmit">
                         保存
                     </n-button>
                 </div>
@@ -35,11 +35,8 @@
 
 <script lang="ts">
 import {defineComponent, ref} from 'vue'
-import {
-    FormInst,
-    FormItemRule,
-    FormRules
-} from 'naive-ui'
+import {FormInst, FormRules, useMessage} from 'naive-ui'
+import call from "../call.js";
 
 interface ModelType {
     domain: string | null
@@ -52,13 +49,14 @@ export default defineComponent({
         onCreate: () => true,
     },
     setup(props, {emit}) {
+        const message = useMessage()
+        const loadIng = ref<boolean>(true)
         const formRef = ref<FormInst | null>(null)
         const formData = ref<ModelType>({
             domain: null,
             key: null,
             crt: null,
         })
-
         const formRules: FormRules = {
             domain: [
                 {
@@ -82,7 +80,20 @@ export default defineComponent({
                 }
             ],
         }
+
+        call({
+            method: "get",
+            url: 'cert/info',
+        }).then(({data}) => {
+            formData.value = data
+        }).catch(err => {
+            console.log(err);
+        }).finally(() => {
+            loadIng.value = false
+        })
+
         return {
+            loadIng,
             formRef,
             formData,
             formRules,
@@ -92,9 +103,23 @@ export default defineComponent({
                     if (errors) {
                         return;
                     }
-                    // todo 提交
-                    console.log(formData);
-                    emit("onCreate")
+                    //
+                    if (loadIng.value) {
+                        return
+                    }
+                    loadIng.value = true
+                    call({
+                        method: "post",
+                        url: 'cert/save',
+                        data: formData.value
+                    }).then(({msg}) => {
+                        message.success(msg);
+                        emit('close')
+                    }).catch(({msg}) => {
+                        message.error(msg);
+                    }).finally(() => {
+                        loadIng.value = false
+                    })
                 })
             }
         }

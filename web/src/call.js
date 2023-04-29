@@ -1,4 +1,6 @@
 import axios from 'axios'
+import utils from "./utils.js";
+
 
 // 创建一个 axios 实例
 const call = axios.create({
@@ -7,8 +9,7 @@ const call = axios.create({
     withCredentials: true, // 异步请求携带cookie
     headers: {
         // 设置后端需要的传参类型
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/x-www-form-urlencoded',
     },
 })
 
@@ -16,6 +17,9 @@ const call = axios.create({
 call.interceptors.request.use(
     function (config) {
         // 在发送请求之前做些什么
+        if (config.method === 'get' && config.data) {
+            config.url = utils.urlAddParams(config.url, config.data)
+        }
         return config
     },
     function (error) {
@@ -35,13 +39,20 @@ call.interceptors.response.use(
         const dataAxios = response.data
         // 这个状态码是和后端约定的
         const code = dataAxios.reset
+        //
+        if (!utils.isJson(dataAxios)) {
+            return Promise.reject({ret: 0, msg: "返回数据格式错误"})
+        }
+        if (dataAxios.ret !== 1) {
+            return Promise.reject(dataAxios)
+        }
         return dataAxios
     },
     function (error) {
         // 超出 2xx 范围的状态码都会触发该函数。
         // 对响应错误做点什么
         console.log(error)
-        return Promise.reject(error)
+        return Promise.reject({ret: 0, msg: "请求失败", "data": error})
     }
 )
 
