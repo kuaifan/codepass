@@ -121,6 +121,29 @@ func (model *MultipassModel) CreateLog(c *gin.Context) {
 	})
 }
 
+// CertInfo 证书详情
+func (model *MultipassModel) CertInfo(c *gin.Context) {
+	domainFile := utils.RunDir("/.codepass/nginx/cert/domain")
+	keyFile := utils.RunDir("/.codepass/nginx/cert/key")
+	crtFile := utils.RunDir("/.codepass/nginx/cert/crt")
+	if !utils.IsFile(domainFile) {
+		c.JSON(http.StatusOK, gin.H{
+			"ret": 0,
+			"msg": "未设置",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"ret": 1,
+		"msg": "获取成功",
+		"data": gin.H{
+			"domain": utils.ReadFile(domainFile),
+			"key":    utils.ReadFile(keyFile),
+			"crt":    utils.ReadFile(crtFile),
+		},
+	})
+}
+
 // CertSave 保存证书
 func (model *MultipassModel) CertSave(c *gin.Context) {
 	var (
@@ -176,6 +199,13 @@ func (model *MultipassModel) CertSave(c *gin.Context) {
 // List 获取实例列表
 func (model *MultipassModel) List(c *gin.Context) {
 	list := instancesList()
+	if list == nil {
+		c.JSON(http.StatusOK, gin.H{
+			"ret": 0,
+			"msg": "暂无数据",
+		})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"ret": 1,
 		"msg": "获取成功",
