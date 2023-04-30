@@ -150,9 +150,17 @@ multipass exec $NAME -- sudo sh -c 'echo ".card-box > .header {display:none}" >>
 
 # 启动 code-server
 CREATE "Starting"
-multipass exec $NAME -- sudo sh -c 'systemctl enable --now code-server@ubuntu'
-if [ $? -ne  0 ]; then
-	echo "Start failed"
+multipass exec $NAME -- sudo sh <<-EOE
+systemctl enable --now code-server@ubuntu
+if [ 0 -eq \$? ]; then
+	echo "success" > /tmp/.code-server
+else
+	echo "error" > /tmp/.code-server
+fi
+EOE
+server=$(multipass exec $NAME -- sh -c 'cat /tmp/.code-server')
+if [ "$server" != "success" ]; then
+	CREATE "Failed"
 	rm -f $CmdPath
 	exit 1
 fi

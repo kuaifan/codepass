@@ -1,16 +1,16 @@
 <template>
-    <n-loading-bar-provider>
-        <n-message-provider>
-            <n-notification-provider>
-                <n-dialog-provider>
-                    <n-config-provider :theme="darkTheme">
+    <n-config-provider :theme="darkTheme">
+        <n-loading-bar-provider>
+            <n-message-provider>
+                <n-notification-provider>
+                    <n-dialog-provider>
                         <Workspaces/>
                         <n-global-style/>
-                    </n-config-provider>
-                </n-dialog-provider>
-            </n-notification-provider>
-        </n-message-provider>
-    </n-loading-bar-provider>
+                    </n-dialog-provider>
+                </n-notification-provider>
+            </n-message-provider>
+        </n-loading-bar-provider>
+    </n-config-provider>
 </template>
 
 <script lang="ts">
