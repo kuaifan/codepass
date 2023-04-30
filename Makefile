@@ -18,8 +18,8 @@ all:
 build:
 	env CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o .
 
-run: build
-	./codepass start
+service: build
+	./codepass service
 
 clean:
 	@rm -f ./codepass

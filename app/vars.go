@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type MultipassModel struct {
+type ServiceModel struct {
 	Ip   string
 	Port string
 }
@@ -37,11 +37,11 @@ type instanceModel struct {
 }
 
 var (
-	MConf MultipassModel
+	ServiceConf ServiceModel
 )
 
-// 获取实例列表
-func instancesList() []*instanceModel {
+// 获取工作区列表
+func workspacesList() []*instanceModel {
 	result, err := utils.Cmd("-c", "multipass list --format json")
 	if err != nil {
 		return nil
@@ -54,7 +54,7 @@ func instancesList() []*instanceModel {
 		instanceBase(entry)
 	}
 	//
-	dirEntry, err := os.ReadDir(utils.RunDir("/.codepass/instances"))
+	dirEntry, err := os.ReadDir(utils.RunDir("/.codepass/workspaces"))
 	if err != nil {
 		return nil
 	}
@@ -78,11 +78,11 @@ func instancesList() []*instanceModel {
 	return data.List
 }
 
-// 获取实例基本信息
+// 获取工作区基本信息
 func instanceBase(entry *instanceModel) *instanceModel {
 	name := entry.Name
-	createFile := utils.RunDir(fmt.Sprintf("/.codepass/instances/%s/create", name))
-	passFile := utils.RunDir(fmt.Sprintf("/.codepass/instances/%s/pass", name))
+	createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
+	passFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/pass", name))
 	if len(entry.Ipv4) > 0 {
 		entry.Ip = entry.Ipv4[0]
 	}
@@ -92,7 +92,7 @@ func instanceBase(entry *instanceModel) *instanceModel {
 	return entry
 }
 
-// 获取实例域名
+// 获取工作区域名
 func instanceDomain(name string) (string, string) {
 	domainFile := utils.RunDir("/.codepass/nginx/cert/domain")
 	if utils.IsFile(domainFile) {
@@ -107,11 +107,11 @@ func instanceDomain(name string) (string, string) {
 	return "", ""
 }
 
-// 更新实例域名
+// 更新工作区域名
 func updateDomain() error {
 	var list []string
 	list = append(list, utils.TemplateContent(utils.NginxDefaultConf, map[string]any{}))
-	for _, entry := range instancesList() {
+	for _, entry := range workspacesList() {
 		if entry.Ip != "" && entry.Domain != "" {
 			list = append(list, utils.TemplateContent(utils.NginxDomainConf, map[string]any{
 				"NAME":   entry.Name,

@@ -119,7 +119,7 @@ MEMORY="{{.MEMORY}}"
 # 保存状态
 CREATE() {
 	echo "$1"
-	echo "$1" > {{.RUN_PATH}}/.codepass/instances/$NAME/create
+	echo "$1" > {{.RUN_PATH}}/.codepass/workspaces/$NAME/create
 }
 
 # 启动虚拟机
@@ -153,7 +153,7 @@ CREATE "Starting"
 multipass exec $NAME -- sudo sh -c 'systemctl enable --now code-server@ubuntu'
 
 # 保存密码
-echo "$PASS" > {{.RUN_PATH}}/.codepass/instances/$NAME/pass
+echo "$PASS" > {{.RUN_PATH}}/.codepass/workspaces/$NAME/pass
 
 # 输出成功
 CREATE "Success"
