@@ -51,7 +51,7 @@ import {
     FormRules, useMessage
 } from 'naive-ui'
 import call from "../call.js";
-import utils from "../utils";
+import utils from "../utils.js";
 
 interface ModelType {
     name: string | null

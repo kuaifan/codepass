@@ -50,13 +50,13 @@
                     </li>
                     <li v-for="item in searchList">
                         <div class="name">{{ item.name }}</div>
-                        <div class="release">{{ item.release }}</div>
+                        <div class="release">{{ item.release || '-' }}</div>
                         <div class="state">{{ state(item) }}</div>
                         <n-dropdown
                                 trigger="click"
                                 :show-arrow="true"
                                 :options="operationMenu"
-                                :render-label="operationLabelRender"
+                                :render-label="operationLabel"
                                 @updateShow="operationShow($event, item)"
                                 @select="operationSelect($event, item)">
                             <n-icon class="menu" size="20">
@@ -66,6 +66,17 @@
                     </li>
                 </ul>
             </div>
+            <n-modal v-model:show="logModal" :auto-focus="false">
+                <n-card
+                        style="width:600px;max-width:90%"
+                        title="日志"
+                        :bordered="false"
+                        size="huge"
+                        closable
+                        @close="logModal=false">
+                    <CreateLog :name="logName"/>
+                </n-card>
+            </n-modal>
         </div>
     </div>
 </template>
@@ -76,12 +87,14 @@ import Header from "../components/Header.vue";
 import Banner from "../components/Banner.vue";
 import Create from "../components/Create.vue";
 import Loading from "../components/Loading.vue";
+import CreateLog from "../components/CreateLog.vue";
 import {AddOutline, EllipsisVertical, Reload, SearchOutline} from "@vicons/ionicons5";
 import {useMessage, useDialog} from "naive-ui";
 import call from "../call.js";
 
 export default defineComponent({
     components: {
+        CreateLog,
         EllipsisVertical,
         Reload, Loading, Create,
         Banner,
@@ -96,6 +109,8 @@ export default defineComponent({
         const message = useMessage()
         const dialog = useDialog()
         const createModal = ref(false);
+        const logModal = ref(false);
+        const logName = ref("");
         const loadIng = ref(false);
         const items = ref([])
         const searchKey = ref("");
@@ -110,6 +125,9 @@ export default defineComponent({
                 label: '打开',
                 key: 'open',
                 disabled: false,
+            }, {
+                label: '日志',
+                key: 'log',
             }, {
                 type: 'divider',
                 key: 'd1'
@@ -146,11 +164,13 @@ export default defineComponent({
 
         return {
             createModal,
+            logModal,
+            logName,
             loadIng,
             searchKey,
             searchList,
             operationMenu,
-            operationLabelRender(option) {
+            operationLabel(option) {
                 if (option.key === 'delete') {
                     return h(
                         'span',
@@ -183,14 +203,17 @@ export default defineComponent({
                 }
             },
             operationSelect(key: string | number, item) {
-                if (key === 'delete') {
-                    const d = dialog.warning({
+                if (key === 'log') {
+                    logName.value = item.name
+                    logModal.value = true
+                } else if (key === 'delete') {
+                    const dd = dialog.warning({
                         title: '删除工作区',
                         content: '确定要删除该工作区吗？',
                         positiveText: '确定',
                         negativeText: '取消',
                         onPositiveClick: () => {
-                            d.loading = true
+                            dd.loading = true
                             return new Promise((resolve) => {
                                 call({
                                     method: "get",
