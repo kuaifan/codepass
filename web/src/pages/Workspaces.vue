@@ -66,6 +66,17 @@
                     </li>
                 </ul>
             </div>
+            <n-modal v-model:show="infoModal" :auto-focus="false">
+                <n-card
+                        style="width:600px;max-width:90%"
+                        title="详情"
+                        :bordered="false"
+                        size="huge"
+                        closable
+                        @close="infoModal=false">
+                    <Info :name="infoName"/>
+                </n-card>
+            </n-modal>
             <n-modal v-model:show="logModal" :auto-focus="false">
                 <n-card
                         style="width:600px;max-width:90%"
@@ -88,12 +99,14 @@ import Banner from "../components/Banner.vue";
 import Create from "../components/Create.vue";
 import Loading from "../components/Loading.vue";
 import CreateLog from "../components/CreateLog.vue";
+import Info from "../components/Info.vue";
 import {AddOutline, EllipsisVertical, Reload, SearchOutline} from "@vicons/ionicons5";
 import {useMessage, useDialog, NButton} from "naive-ui";
 import call from "../call.js";
 
 export default defineComponent({
     components: {
+        Info,
         CreateLog,
         EllipsisVertical,
         Reload, Loading, Create,
@@ -109,6 +122,8 @@ export default defineComponent({
         const message = useMessage()
         const dialog = useDialog()
         const createModal = ref(false);
+        const infoModal = ref(false);
+        const infoName = ref("");
         const logModal = ref(false);
         const logName = ref("");
         const loadIng = ref(false);
@@ -125,6 +140,9 @@ export default defineComponent({
                 label: '打开',
                 key: 'open',
                 disabled: false,
+            }, {
+                label: '详情',
+                key: 'info',
             }, {
                 label: '日志',
                 key: 'log',
@@ -164,6 +182,8 @@ export default defineComponent({
 
         return {
             createModal,
+            infoModal,
+            infoName,
             logModal,
             logName,
             loadIng,
@@ -211,7 +231,10 @@ export default defineComponent({
                 }
             },
             operationSelect(key: string | number, item) {
-                if (key === 'log') {
+                if (key === 'info') {
+                    infoName.value = item.name
+                    infoModal.value = true
+                } else if (key === 'log') {
                     logName.value = item.name
                     logModal.value = true
                 } else if (key === 'delete') {

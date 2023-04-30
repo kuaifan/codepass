@@ -158,6 +158,7 @@ func (model *ServiceModel) WorkspacesList(c *gin.Context) {
 // WorkspacesInfo 查看工作区信息
 func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 	name := c.Query("name")
+	format := c.Query("format")
 	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
 	if !utils.IsDir(dirPath) {
 		c.JSON(http.StatusOK, gin.H{
@@ -166,7 +167,13 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 		})
 		return
 	}
-	result, err := utils.Cmd("-c", fmt.Sprintf("multipass info %s --format json", name))
+	var result string
+	var err error
+	if format == "json" {
+		result, err = utils.Cmd("-c", fmt.Sprintf("multipass info %s --format json", name))
+	} else {
+		result, err = utils.Cmd("-c", fmt.Sprintf("multipass info %s", name))
+	}
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,
@@ -177,16 +184,22 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 		})
 		return
 	}
-	var data infoModel
-	if err = json.Unmarshal([]byte(result), &data); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"ret": 0,
-			"msg": "解析失败",
-			"data": gin.H{
-				"err": err.Error(),
-			},
-		})
-		return
+	var info any
+	if format == "json" {
+		var data infoModel
+		if err = json.Unmarshal([]byte(result), &data); err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"ret": 0,
+				"msg": "解析失败",
+				"data": gin.H{
+					"err": err.Error(),
+				},
+			})
+			return
+		}
+		info = data.Info[name]
+	} else {
+		info = result
 	}
 	createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
 	passFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/pass", name))
@@ -196,7 +209,7 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 		"data": gin.H{
 			"create": strings.TrimSpace(utils.ReadFile(createFile)),
 			"pass":   strings.TrimSpace(utils.ReadFile(passFile)),
-			"info":   data.Info[name],
+			"info":   info,
 		},
 	})
 }

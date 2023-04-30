@@ -1,6 +1,6 @@
 <template>
-    <div class="create-log">
-        <n-log ref="nRef" :log="content" trim/>
+    <div class="info">
+        <n-log ref="nRef" :log="content" :rows="10" trim/>
         <div class="footer">
             <n-button :loading="loading" @click="getData">刷新</n-button>
         </div>
@@ -8,7 +8,7 @@
 </template>
 
 <style lang="less" scoped>
-.create-log {
+.info {
     .footer {
         display: flex;
         align-items: center;
@@ -18,7 +18,7 @@
 }
 </style>
 <script lang="ts">
-import {defineComponent, nextTick, ref} from 'vue'
+import {defineComponent, ref} from 'vue'
 import call from "../call.js";
 import {useMessage} from "naive-ui";
 
@@ -43,15 +43,13 @@ export default defineComponent({
             loading.value = true
             call({
                 method: "get",
-                url: 'workspaces/create/log',
+                url: 'workspaces/info',
                 data: {
-                    name: props.name
+                    name: props.name,
+                    format: "text"
                 }
             }).then(({data}) => {
-                content.value = data.log
-                nextTick(() => {
-                    nRef.value?.scrollTo({ position: 'bottom', slient: true })
-                })
+                content.value = data.info
             }).catch(err => {
                 message.error(err.msg)
             }).finally(() => {
@@ -59,7 +57,6 @@ export default defineComponent({
             })
         }
         getData()
-        setInterval(getData, 15 * 1000)
 
         return {
             content,
