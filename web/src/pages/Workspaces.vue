@@ -7,7 +7,7 @@
         <div class="search">
             <div class="wrapper" :class="{loading: loadIng}">
                 <div class="input-box">
-                    <n-input round placeholder="">
+                    <n-input round v-model:value="searchKey" placeholder="">
                         <template #prefix>
                             <n-icon :component="SearchOutline"/>
                         </template>
@@ -40,7 +40,7 @@
         <!-- 列表 -->
         <div class="list">
             <div class="wrapper">
-                <n-empty v-if="items.length === 0" class="empty" size="huge" description="没有工作区"/>
+                <n-empty v-if="searchList.length === 0" class="empty" size="huge" description="没有工作区"/>
                 <ul v-else>
                     <li class="nav">
                         <div class="name">工作区名称</div>
@@ -48,7 +48,7 @@
                         <div class="state">状态</div>
                         <div class="menu">操作</div>
                     </li>
-                    <li v-for="item in items">
+                    <li v-for="item in searchList">
                         <div class="name">{{ item.name }}</div>
                         <div class="release">{{ item.release }}</div>
                         <div class="state">{{ state(item) }}</div>
@@ -71,7 +71,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, h, ref, VNodeChild} from "vue";
+import {defineComponent, computed, h, ref, VNodeChild} from "vue";
 import Header from "../components/Header.vue";
 import Banner from "../components/Banner.vue";
 import Create from "../components/Create.vue";
@@ -98,6 +98,13 @@ export default defineComponent({
         const createModal = ref(false);
         const loadIng = ref(false);
         const items = ref([])
+        const searchKey = ref("");
+        const searchList = computed(() => {
+            if (searchKey.value === "") {
+                return items.value
+            }
+            return items.value.filter(item => item.name.indexOf(searchKey.value) !== -1)
+        })
         const operationMenu = ref([
             {
                 label: '打开',
@@ -140,7 +147,8 @@ export default defineComponent({
         return {
             createModal,
             loadIng,
-            items,
+            searchKey,
+            searchList,
             operationMenu,
             operationLabelRender(option) {
                 if (option.key === 'delete') {
