@@ -44,6 +44,19 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		})
 		return
 	}
+	if cpus != "" && !utils.Test(cpus, "^\\d+$") {
+		c.JSON(http.StatusOK, gin.H{
+			"ret": 0,
+			"msg": "CPU只能是存数字",
+		})
+		return
+	}
+	if disk != "" && utils.Test(disk, "^\\d+$") {
+		disk = fmt.Sprintf("%sGB", disk)
+	}
+	if memory != "" && utils.Test(memory, "^\\d+$") {
+		memory = fmt.Sprintf("%sGB", memory)
+	}
 	// 检测工作区是否已存在
 	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
 	if utils.IsDir(dirPath) {

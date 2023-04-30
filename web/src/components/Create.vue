@@ -86,7 +86,7 @@ export default defineComponent({
                 {
                     validator(rule: FormItemRule, value: string) {
                         if (value) {
-                            if (!/^\d*$/.test(value)) {
+                            if (!/^\d+$/.test(value)) {
                                 return new Error('CPU必须是整数')
                             } else if (Number(value) < 1 || Number(value) > 8) {
                                 return new Error('CPU应该是1-8之间的整数')
@@ -101,7 +101,7 @@ export default defineComponent({
                 {
                     validator(rule: FormItemRule, value: string) {
                         if (value) {
-                            if (!/^\d*$/.test(value)) {
+                            if (!/^\d+$/.test(value)) {
                                 return new Error('硬盘必须是整数')
                             } else if (Number(value) < 10 || Number(value) > 1024) {
                                 return new Error('硬盘应该是10-1024之间的整数')
