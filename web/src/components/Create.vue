@@ -51,6 +51,7 @@ import {
     FormRules, useMessage
 } from 'naive-ui'
 import call from "../call.js";
+import utils from "../utils";
 
 interface ModelType {
     name: string | null
@@ -144,10 +145,13 @@ export default defineComponent({
                         return
                     }
                     loadIng.value = true
+                    const data = utils.cloneJSON(formData.value)
+                    data.disk = data.disk + "GB"
+                    data.memory = data.memory + "GB"
                     call({
                         method: "get",
                         url: 'workspaces/create',
-                        data: formData.value
+                        data
                     }).then(({msg}) => {
                         message.success(msg);
                         emit('close')
