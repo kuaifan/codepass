@@ -18,7 +18,7 @@
 }
 </style>
 <script lang="ts">
-import {defineComponent, nextTick, ref} from 'vue'
+import {defineComponent, onBeforeUnmount, nextTick, ref} from 'vue'
 import call from "../call.js";
 import {useMessage} from "naive-ui";
 
@@ -59,7 +59,11 @@ export default defineComponent({
             })
         }
         getData()
-        setInterval(getData, 15 * 1000)
+        const getInter = setInterval(getData, 15 * 1000)
+
+        onBeforeUnmount(() => {
+            clearInterval(getInter)
+        })
 
         return {
             content,

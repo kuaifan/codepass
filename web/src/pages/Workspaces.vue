@@ -93,7 +93,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, computed, h, ref, VNodeChild} from "vue";
+import {defineComponent, computed, h, ref, VNodeChild, onBeforeUnmount} from "vue";
 import Header from "../components/Header.vue";
 import Banner from "../components/Banner.vue";
 import Create from "../components/Create.vue";
@@ -178,7 +178,11 @@ export default defineComponent({
             })
         }
         onLoad(false)
-        setInterval(_ => onLoad(false), 1000 * 30)
+        const loadInter = setInterval(_ => onLoad(false), 1000 * 30)
+
+        onBeforeUnmount(() => {
+            clearInterval(loadInter)
+        })
 
         return {
             createModal,
