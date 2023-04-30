@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -66,14 +67,17 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		})
 		return
 	}
-	domain, _ := instanceDomain(name)
+	// 端口代理地址
+	_, url := instanceDomain(name)
+	sampleRegexp := regexp.MustCompile(`^(https*://)`)
+	proxyUri := sampleRegexp.ReplaceAllString(url, "$1{{port}}-")
 	// 生成创建脚本
 	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.sh", name))
 	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.log", name))
 	err := utils.WriteFile(cmdFile, utils.TemplateContent(utils.CreateExecContent, map[string]any{
-		"NAME":   name,
-		"PASS":   pass,
-		"DOMAIN": domain,
+		"NAME":      name,
+		"PASS":      pass,
+		"PROXY_URI": proxyUri,
 
 		"CPUS":   cpus,
 		"DISK":   disk,

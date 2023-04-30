@@ -111,7 +111,7 @@ CmdPath=$0
 # 全局变量
 NAME="{{.NAME}}"
 PASS="{{.PASS}}"
-DOMAIN="{{.DOMAIN}}"
+PROXY_URI="{{.PROXY_URI}}"
 
 CPUS="{{.CPUS}}"
 DISK="{{.DISK}}"
@@ -160,7 +160,7 @@ EOE
 # 启动 code-server
 CREATE "Starting"
 multipass exec $NAME -- sudo sh <<-EOE
-systemctl set-environment VSCODE_PROXY_URI=https://{{"{{"}}port{{"}}"}}-$DOMAIN
+systemctl set-environment VSCODE_PROXY_URI=$PROXY_URI
 systemctl enable --now code-server@ubuntu
 if [ 0 -eq \$? ]; then
 	echo "success" > /tmp/.code-server
