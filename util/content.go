@@ -151,6 +151,11 @@ multipass exec $NAME -- sudo sh -c 'echo ".card-box > .header {display:none}" >>
 # 启动 code-server
 CREATE "Starting"
 multipass exec $NAME -- sudo sh -c 'systemctl enable --now code-server@ubuntu'
+if [ $? -ne  0 ]; then
+	echo "Start failed"
+	rm -f $CmdPath
+	exit 1
+fi
 
 # 保存密码
 echo "$PASS" > {{.RUN_PATH}}/.codepass/workspaces/$NAME/pass
