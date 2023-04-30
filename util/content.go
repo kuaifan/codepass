@@ -111,6 +111,7 @@ CmdPath=$0
 # 全局变量
 NAME="{{.NAME}}"
 PASS="{{.PASS}}"
+DOMAIN="{{.DOMAIN}}"
 
 CPUS="{{.CPUS}}"
 DISK="{{.DISK}}"
@@ -146,11 +147,20 @@ password: $PASS
 cert: false
 EOF
 EOE
-multipass exec $NAME -- sudo sh -c 'echo ".card-box > .header {display:none}" >> /usr/lib/code-server/src/browser/pages/login.css'
+
+# 优化页面资源
+multipass exec $NAME -- sudo sh <<-EOE
+echo ".card-box > .header {display:none}" >> /usr/lib/code-server/src/browser/pages/login.css
+rm -f /usr/lib/code-server/src/browser/media/pwa-icon-192.png
+rm -f /usr/lib/code-server/src/browser/media/pwa-icon-512.png
+rm -f /usr/lib/code-server/src/browser/media/favicon-dark-support.svg
+rm -f /usr/lib/code-server/src/browser/media/favicon.ico
+EOE
 
 # 启动 code-server
 CREATE "Starting"
 multipass exec $NAME -- sudo sh <<-EOE
+systemctl set-environment VSCODE_PROXY_URI=https://{{"{{"}}port{{"}}"}}-$DOMAIN
 systemctl enable --now code-server@ubuntu
 if [ 0 -eq \$? ]; then
 	echo "success" > /tmp/.code-server
@@ -209,7 +219,7 @@ upstream server_{{.NAME}} {
 server {
 	listen 80;
 	listen 443 ssl http2;
-	server_name {{.DOMAIN}};
+	server_name ~^(\d+)?{{.DOMAIN}}$;
 
 	if ($server_port !~ 443){
 		rewrite ^(/.*)$ https://$host$1 permanent;

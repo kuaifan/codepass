@@ -89,7 +89,7 @@ import Create from "../components/Create.vue";
 import Loading from "../components/Loading.vue";
 import CreateLog from "../components/CreateLog.vue";
 import {AddOutline, EllipsisVertical, Reload, SearchOutline} from "@vicons/ionicons5";
-import {useMessage, useDialog} from "naive-ui";
+import {useMessage, useDialog, NButton} from "naive-ui";
 import call from "../call.js";
 
 export default defineComponent({
@@ -183,16 +183,24 @@ export default defineComponent({
                     )
                 }
                 if (option.key === 'open' && operationItem.value.url) {
-                    return h(
-                        'a',
+                    const action = operationItem.value.url + "/login"
+                    return h('form',
                         {
-                            href: operationItem.value.url,
+                            action,
+                            method: 'post',
                             target: '_blank'
                         },
-                        {
-                            default: () => option.label as VNodeChild
-                        }
-                    )
+                        [
+                            h('input', {type: 'hidden', name: 'base', value: '.'}),
+                            h('input', {type: 'hidden', name: 'href', value: action}),
+                            h('input', {type: 'hidden', name: 'password', value: operationItem.value.pass}),
+                            h(NButton, {
+                                text: true,
+                                attrType: 'submit'
+                            }, {
+                                default: () => option.label as VNodeChild
+                            }),
+                        ])
                 }
                 return option.label as VNodeChild
             },
