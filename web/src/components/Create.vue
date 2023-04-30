@@ -146,7 +146,7 @@ export default defineComponent({
                     loadIng.value = true
                     call({
                         method: "get",
-                        url: 'create',
+                        url: 'workspaces/create',
                         data: formData.value
                     }).then(({msg}) => {
                         message.success(msg);

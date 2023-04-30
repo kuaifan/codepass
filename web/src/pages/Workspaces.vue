@@ -105,7 +105,7 @@ export default defineComponent({
             //
             call({
                 method: "get",
-                url: 'list',
+                url: 'workspaces/list',
             }).then(({data}) => {
                 items.value = data.list
             }).catch(err => {
@@ -173,7 +173,7 @@ export default defineComponent({
                             return new Promise((resolve) => {
                                 call({
                                     method: "get",
-                                    url: 'delete',
+                                    url: 'workspaces/delete',
                                     data: {
                                         name: item.name
                                     }

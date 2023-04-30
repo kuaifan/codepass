@@ -83,7 +83,7 @@ export default defineComponent({
 
         call({
             method: "get",
-            url: 'cert/info',
+            url: 'certs/info',
         }).then(({data}) => {
             formData.value = data
         }).catch(err => {
@@ -110,7 +110,7 @@ export default defineComponent({
                     loadIng.value = true
                     call({
                         method: "post",
-                        url: 'cert/save',
+                        url: 'certs/save',
                         data: formData.value
                     }).then(({msg}) => {
                         message.success(msg);

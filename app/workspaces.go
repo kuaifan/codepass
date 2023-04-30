@@ -54,8 +54,8 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		return
 	}
 	// 生成创建脚本
-	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/launch.sh", name))
-	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/launch.log", name))
+	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.sh", name))
+	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.log", name))
 	err := utils.WriteFile(cmdFile, utils.TemplateContent(utils.CreateExecContent, map[string]any{
 		"NAME": name,
 		"PASS": pass,
@@ -77,7 +77,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	// 执行创建脚本
 	go func() {
 		_, _ = utils.Cmd("-c", fmt.Sprintf("chmod +x %s", cmdFile))
-		_, _ = utils.Cmd("-c", fmt.Sprintf("/bin/sh %s > %s", cmdFile, logFile))
+		_, _ = utils.Cmd("-c", fmt.Sprintf("/bin/sh %s > %s 2>&1", cmdFile, logFile))
 		_ = updateDomain()
 	}()
 	//
@@ -101,7 +101,7 @@ func (model *ServiceModel) WorkspacesCreateLog(c *gin.Context) {
 	if tail > 10000 {
 		tail = 10000
 	}
-	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/launch.log", name))
+	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.log", name))
 	createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
 	if !utils.IsFile(logFile) {
 		c.JSON(http.StatusOK, gin.H{
