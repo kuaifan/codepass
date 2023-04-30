@@ -1,6 +1,6 @@
 <template>
     <div class="workspaces">
-        <Header/>
+        <Header @domainSave="domainSave"/>
         <Banner/>
 
         <!-- 搜索 -->
@@ -32,7 +32,7 @@
                         size="huge"
                         closable
                         @close="createModal=false">
-                    <Create @close="createModal=false"/>
+                    <Create @createDone="createDone"/>
                 </n-card>
             </n-modal>
         </div>
@@ -57,6 +57,7 @@
                                 :show-arrow="true"
                                 :options="operationMenu"
                                 :render-label="operationLabelRender"
+                                @updateShow="operationShow($event, item)"
                                 @select="operationSelect($event, item)">
                             <n-icon class="menu" size="20">
                                 <ellipsis-vertical/>
@@ -94,8 +95,23 @@ export default defineComponent({
     setup() {
         const message = useMessage()
         const dialog = useDialog()
+        const createModal = ref(false);
         const loadIng = ref(false);
         const items = ref([])
+        const operationMenu = ref([
+            {
+                label: '打开',
+                key: 'open',
+                disabled: false,
+            }, {
+                type: 'divider',
+                key: 'd1'
+            }, {
+                label: '删除',
+                key: "delete",
+            }
+        ])
+        const operationItem = ref({})
 
         const onLoad = (tip) => {
             if (loadIng.value) {
@@ -119,25 +135,13 @@ export default defineComponent({
             })
         }
         onLoad(false)
+        setInterval(_ => onLoad(false), 1000 * 30)
 
         return {
-            createModal: ref(false),
+            createModal,
             loadIng,
             items,
-            operationMenu: [
-                {
-                    label: '打开',
-                    key: 'open',
-                },
-                {
-                    type: 'divider',
-                    key: 'd1'
-                },
-                {
-                    label: '删除',
-                    key: "delete",
-                }
-            ],
+            operationMenu,
             operationLabelRender(option) {
                 if (option.key === 'delete') {
                     return h(
@@ -150,16 +154,25 @@ export default defineComponent({
                         }
                     )
                 }
-                return h(
-                    'a',
-                    {
-                        href: '',
-                        target: '_blank'
-                    },
-                    {
-                        default: () => option.label as VNodeChild
-                    }
-                )
+                if (option.key === 'open' && operationItem.value.url) {
+                    return h(
+                        'a',
+                        {
+                            href: operationItem.value.url,
+                            target: '_blank'
+                        },
+                        {
+                            default: () => option.label as VNodeChild
+                        }
+                    )
+                }
+                return option.label as VNodeChild
+            },
+            operationShow(show: boolean, item) {
+                if (show) {
+                    operationItem.value = item
+                    operationMenu.value[0]['disabled'] = !(item.create === "Success" && item.state === "Running" && /^https*:\/\//.test(item.url))
+                }
             },
             operationSelect(key: string | number, item) {
                 if (key === 'delete') {
@@ -191,6 +204,13 @@ export default defineComponent({
             },
             addIcon() {
                 return h(AddOutline);
+            },
+            createDone() {
+                createModal.value = false
+                onLoad(true)
+            },
+            domainSave() {
+                onLoad(true)
             },
             onLoad
         };
@@ -229,7 +249,7 @@ export default defineComponent({
                 .reload {
                     > i,
                     .loading {
-                        display: flex;
+                        opacity: 1;
                     }
                 }
             }
@@ -249,7 +269,8 @@ export default defineComponent({
 
                 > i,
                 .loading {
-                    display: none;
+                    transition: all 0.3s;
+                    opacity: 0.5;
                     font-size: 20px;
                     width: 20px;
                     height: 20px;

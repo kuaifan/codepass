@@ -114,7 +114,7 @@ export default defineComponent({
                         data: formData.value
                     }).then(({msg}) => {
                         message.success(msg);
-                        emit('close')
+                        emit('domainSave')
                     }).catch(({msg}) => {
                         message.error(msg);
                     }).finally(() => {

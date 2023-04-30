@@ -154,7 +154,7 @@ export default defineComponent({
                         data
                     }).then(({msg}) => {
                         message.success(msg);
-                        emit('close')
+                        emit('createDone')
                     }).catch(({msg}) => {
                         message.error(msg);
                     }).finally(() => {

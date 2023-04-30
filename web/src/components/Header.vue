@@ -23,15 +23,15 @@
                 </n-dropdown>
             </div>
         </div>
-        <n-modal v-model:show="showModal" :auto-focus="false">
+        <n-modal v-model:show="domainShow" :auto-focus="false">
             <n-card
                     style="width:600px;max-width:90%"
                     title="域名证书"
                     :bordered="false"
                     size="huge"
                     closable
-                    @close="showModal=false">
-                <Domain @close="showModal=false"/>
+                    @close="domainShow=false">
+                <Domain @domainSave="domainSave"/>
             </n-card>
         </n-modal>
     </n-layout-header>
@@ -74,14 +74,13 @@ import { useMessage } from 'naive-ui'
 import {EllipsisVertical} from "@vicons/ionicons5";
 import Domain from "./Domain.vue";
 
-const showModal = ref(false)
-
 export default defineComponent({
     components: {Domain, EllipsisVertical},
-    setup() {
+    setup(props, {emit}) {
         const message = useMessage()
+        const domainShow = ref(false)
         return {
-            showModal,
+            domainShow,
             options: [
                 {
                     label: '域名证书',
@@ -112,11 +111,15 @@ export default defineComponent({
             },
             handleSelect(key: string) {
                 if (key === 'domain') {
-                    showModal.value = true
+                    domainShow.value = true
                 } else if (key === 'logout') {
                     message.warning('没有实现')
                 }
             },
+            domainSave() {
+                domainShow.value = false
+                emit('domainSave')
+            }
         }
     }
 })
