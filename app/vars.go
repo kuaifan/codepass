@@ -89,15 +89,18 @@ func instanceBase(entry *instanceModel) *instanceModel {
 	}
 	entry.Create = strings.TrimSpace(utils.ReadFile(createFile))
 	entry.Pass = strings.TrimSpace(utils.ReadFile(passFile))
-	entry.Domain, entry.Url = instanceDomain(name)
+	entry.Domain, entry.Url = InstanceDomain(name)
 	return entry
 }
 
-// 获取工作区域名
-func instanceDomain(name string) (string, string) {
+// InstanceDomain 获取[工作区]域名
+func InstanceDomain(name string) (string, string) {
 	domainFile := utils.RunDir("/.codepass/nginx/cert/domain")
 	if utils.IsFile(domainFile) {
-		domainAddr := fmt.Sprintf("%s-code.%s", name, strings.TrimSpace(utils.ReadFile(domainFile)))
+		domainAddr := strings.TrimSpace(utils.ReadFile(domainFile))
+		if name != "" {
+			domainAddr = fmt.Sprintf("%s-code.%s", name, domainAddr)
+		}
 		_, httpsPort := utils.GetProtsConfig()
 		if httpsPort == "443" {
 			return domainAddr, fmt.Sprintf("https://%s", domainAddr)
@@ -108,14 +111,10 @@ func instanceDomain(name string) (string, string) {
 	return "", ""
 }
 
-// 更新工作区域名
-func updateDomain() error {
-	domainFile := utils.RunDir("/.codepass/nginx/cert/domain")
-	domainAddr := ""
-	if utils.IsFile(domainFile) {
-		domainAddr = strings.TrimSpace(utils.ReadFile(domainFile))
-	}
-	if domainAddr == "" {
+// UpdateDomain 更新工作区域名
+func UpdateDomain() error {
+	mainDomain, _ := InstanceDomain("")
+	if mainDomain == "" {
 		return errors.New("no domain")
 	}
 	err := utils.WriteFile(utils.RunDir("/.codepass/nginx/lua/upsteam.lua"), utils.TemplateContent(utils.NginxUpsteamLua, map[string]any{}))
@@ -124,7 +123,7 @@ func updateDomain() error {
 	}
 	var list []string
 	list = append(list, utils.TemplateContent(utils.NginxDefaultConf, map[string]any{
-		"MAIN_DOMAIN":  domainAddr,
+		"MAIN_DOMAIN":  mainDomain,
 		"SERVICE_PORT": ServiceConf.Port,
 	}))
 	for _, entry := range workspacesList() {

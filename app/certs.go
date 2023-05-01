@@ -73,7 +73,7 @@ func (model *ServiceModel) CertsSave(c *gin.Context) {
 		})
 		return
 	}
-	_ = updateDomain()
+	_ = UpdateDomain()
 	//
 	c.JSON(http.StatusOK, gin.H{
 		"ret": 1,

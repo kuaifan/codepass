@@ -28,6 +28,15 @@ var serviceCmd = &cobra.Command{
 			utils.PrintError("无法写入文件")
 			os.Exit(1)
 		}
+		err = app.UpdateDomain()
+		if err != nil {
+			utils.PrintError(fmt.Sprintf("无法启动服务: %s", err.Error()))
+			os.Exit(1)
+		}
+		go time.AfterFunc(1*time.Second, func() {
+			_, url := app.InstanceDomain("")
+			utils.PrintSuccess(fmt.Sprintf("\n服务地址: %s\n", url))
+		})
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		r := gin.Default()

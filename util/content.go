@@ -262,12 +262,12 @@ server {
 	ssl_session_cache shared:SSL:10m;
 	ssl_session_timeout 10m;
 
-	location /api {
+	location /api/ {
         proxy_http_version 1.1;
         proxy_set_header Connection "";
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Real-PORT $remote_port;
-        proxy_set_header X-Forwarded-Host $the_host;
+        proxy_set_header X-Forwarded-Host $the_host/api;
         proxy_set_header X-Forwarded-Proto $the_scheme;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header Host $http_host;
@@ -276,7 +276,7 @@ server {
         proxy_set_header Server-Name $server_name;
         proxy_set_header Server-Addr $server_addr;
         proxy_set_header Server-Port $server_port;
-        proxy_pass http://host.docker.internal:{{.SERVICE_PORT}};
+        proxy_pass http://host.docker.internal:{{.SERVICE_PORT}}/;
     }
 }
 `)

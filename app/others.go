@@ -7,7 +7,7 @@ import (
 
 // OthersDomainUpdate 更新域名
 func (model *ServiceModel) OthersDomainUpdate(c *gin.Context) {
-	err := updateDomain()
+	err := UpdateDomain()
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,

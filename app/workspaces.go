@@ -68,7 +68,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		return
 	}
 	// 端口代理地址
-	_, url := instanceDomain(name)
+	_, url := InstanceDomain(name)
 	proxyRegexp := regexp.MustCompile(`^(https*://)`)
 	proxyDomain := proxyRegexp.ReplaceAllString(url, "")
 	proxyUri := proxyRegexp.ReplaceAllString(url, "$1{{port}}-")
@@ -99,7 +99,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	go func() {
 		_, _ = utils.Cmd("-c", fmt.Sprintf("chmod +x %s", cmdFile))
 		_, _ = utils.Cmd("-c", fmt.Sprintf("/bin/sh %s > %s 2>&1", cmdFile, logFile))
-		_ = updateDomain()
+		_ = UpdateDomain()
 	}()
 	//
 	c.JSON(http.StatusOK, gin.H{
@@ -232,7 +232,7 @@ func (model *ServiceModel) WorkspacesDelete(c *gin.Context) {
 	if utils.IsDir(dirPath) {
 		_, _ = utils.Cmd("-c", fmt.Sprintf("rm -rf %s", dirPath)) // 删除工作区目录
 	}
-	_ = updateDomain()
+	_ = UpdateDomain()
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"ret": 0,
