@@ -7,18 +7,17 @@
             <div class="user">
                 <n-button
                         size="small"
-                        tag="a"
                         quaternary
                         class="name"
-                        target="_blank">
-                    Codepass
+                        @click="handleThemeUpdate">
+                    {{ themeLabelMap[themeName] }}
                 </n-button>
                 <n-dropdown
                         trigger="click"
                         :show-arrow="true"
-                        :options="options"
+                        :options="userMenuOptions"
                         :render-label="renderDropdownLabel"
-                        @select="handleSelect">
+                        @select="handleMenuSelect">
                     <n-avatar class="avatar" round>C</n-avatar>
                 </n-dropdown>
             </div>
@@ -47,7 +46,7 @@
         align-items: center;
 
         .name {
-            margin-right: 12px;
+            margin-right: 18px;
         }
 
         .avatar {
@@ -58,40 +57,59 @@
 </style>
 
 <script lang="ts">
-import {defineComponent, h, ref, VNodeChild} from "vue";
-import { useMessage } from 'naive-ui'
+import {defineComponent, computed, h, ref, VNodeChild} from "vue";
+import {useMessage} from 'naive-ui'
 import {EllipsisVertical} from "@vicons/ionicons5";
+import {useThemeName} from '../store'
 
 export default defineComponent({
     components: {EllipsisVertical},
-    setup(props, {emit}) {
+    setup() {
         const message = useMessage()
-        return {
-            options: [
-                {
-                    label: '退出登录',
-                    key: "logout",
-                }
-            ],
-            renderDropdownLabel(option) {
-                if (option.key === 'logout') {
-                    return h(
-                        'span',
-                        {
-                            style: 'color:rgb(248,113,113);height:34px;display:flex;align-items:center',
-                        },
-                        {
-                            default: () => option.label as VNodeChild
-                        }
-                    )
-                }
-                return option.label as VNodeChild
-            },
-            handleSelect(key: string) {
-                if (key === 'logout') {
-                    message.warning('没有实现')
-                }
+        const themeLabelMap = computed(() => ({
+            dark: "浅色",
+            light: "深色"
+        }))
+        const themeName = useThemeName()
+        const handleThemeUpdate = () => {
+            if (themeName.value === 'dark') {
+                themeName.value = 'light'
+            } else {
+                themeName.value = 'dark'
             }
+        }
+        const userMenuOptions = ref([{
+            label: '退出登录',
+            key: "logout",
+        }])
+        const renderDropdownLabel = (option) => {
+            if (option.key === 'logout') {
+                return h(
+                    'span',
+                    {
+                        style: 'color:rgb(248,113,113);height:34px;display:flex;align-items:center',
+                    },
+                    {
+                        default: () => option.label as VNodeChild
+                    }
+                )
+            }
+            return option.label as VNodeChild
+        }
+        const handleMenuSelect = (key: string) => {
+            if (key === 'logout') {
+                message.warning('没有实现')
+            }
+        }
+        return {
+            // theme
+            themeName,
+            themeLabelMap,
+            handleThemeUpdate,
+            //
+            userMenuOptions,
+            handleMenuSelect,
+            renderDropdownLabel,
         }
     }
 })

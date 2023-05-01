@@ -2,27 +2,31 @@
     <div class="workspaces">
         <Header/>
         <Banner/>
+        <n-divider/>
 
         <!-- 搜索 -->
         <div class="search">
             <div class="wrapper" :class="{loading: loadIng}">
-                <div class="input-box">
-                    <n-input round v-model:value="searchKey" placeholder="">
-                        <template #prefix>
-                            <n-icon :component="SearchOutline"/>
-                        </template>
-                    </n-input>
-                    <div class="reload" @click="onLoad(true)">
-                        <Loading v-if="loadIng"/>
-                        <n-icon v-else>
-                            <reload/>
-                        </n-icon>
+                <div class="search-box">
+                    <div class="input-box">
+                        <n-input round v-model:value="searchKey" placeholder="">
+                            <template #prefix>
+                                <n-icon :component="SearchOutline"/>
+                            </template>
+                        </n-input>
+                        <div class="reload" @click="onLoad(true)">
+                            <Loading v-if="loadIng"/>
+                            <n-icon v-else>
+                                <reload/>
+                            </n-icon>
+                        </div>
                     </div>
+                    <div class="interval"></div>
+                    <n-button type="success" :render-icon="addIcon" @click="createModal = true">
+                        创建工作区
+                    </n-button>
                 </div>
-                <div class="interval"></div>
-                <n-button type="success" :render-icon="addIcon" @click="createModal = true">
-                    创建工作区
-                </n-button>
+                <n-divider/>
             </div>
             <n-modal v-model:show="createModal" :auto-focus="false">
                 <n-card
@@ -41,33 +45,43 @@
         <div class="list">
             <div class="wrapper">
                 <n-empty v-if="searchList.length === 0" class="empty" size="huge" description="没有工作区"/>
-                <ul v-else>
-                    <li class="nav">
+                <template v-else>
+                    <div class="item nav">
                         <div class="name">工作区名称</div>
                         <div class="release">系统版本</div>
                         <div class="state">状态</div>
                         <div class="menu">操作</div>
-                    </li>
-                    <li v-for="item in searchList">
-                        <div class="name">{{ item.name }}</div>
-                        <div class="release">{{ item.release || '-' }}</div>
-                        <div class="state" @click="onState(item)">
-                            <div v-if="stateLoading(item)" class="load"><Loading/></div>
-                            <div class="text">{{ stateText(item) }}</div>
-                        </div>
-                        <n-dropdown
-                                trigger="click"
-                                :show-arrow="true"
-                                :options="operationMenu"
-                                :render-label="operationLabel"
-                                @updateShow="operationShow($event, item)"
-                                @select="operationSelect($event, item)">
-                            <n-icon class="menu" size="20">
-                                <ellipsis-vertical/>
-                            </n-icon>
-                        </n-dropdown>
-                    </li>
-                </ul>
+                    </div>
+                    <n-list hoverable :show-divider="false">
+                        <n-list-item v-for="item in searchList">
+                            <div class="item">
+                                <div class="name">{{ item.name }}</div>
+                                <div class="release">{{ item.release || '-' }}</div>
+                                <div class="state" @click="onState(item)">
+                                    <div v-if="stateLoading(item)" class="load">
+                                        <Loading/>
+                                    </div>
+                                    <div class="text">{{ stateText(item) }}</div>
+                                </div>
+                                <n-dropdown
+                                        trigger="click"
+                                        :show-arrow="true"
+                                        :options="operationMenu"
+                                        :render-label="operationLabel"
+                                        @updateShow="operationShow($event, item)"
+                                        @select="operationSelect($event, item)">
+                                    <n-button quaternary class="menu">
+                                        <template #icon>
+                                            <n-icon>
+                                                <ellipsis-vertical/>
+                                            </n-icon>
+                                        </template>
+                                    </n-button>
+                                </n-dropdown>
+                            </div>
+                        </n-list-item>
+                    </n-list>
+                </template>
             </div>
             <n-modal v-model:show="infoModal" :auto-focus="false">
                 <n-card
@@ -319,12 +333,13 @@ export default defineComponent({
 
     .wrapper {
         flex: 1;
-        padding: 20px 0;
-        border-bottom: 1px solid rgba(41, 37, 36, 0.8);
-        display: flex;
-        align-items: center;
-        flex-direction: row;
-        justify-content: space-between;
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            flex-direction: row;
+            justify-content: space-between;
+        }
 
         &.loading,
         &:hover {
@@ -376,84 +391,66 @@ export default defineComponent({
 
     .wrapper {
         flex: 1;
-        padding: 18px 0;
 
         .empty {
             margin: 120px 0;
         }
 
-        ul {
-            margin: 0;
-            padding: 0;
+        > ul {
+            background-color: transparent;
 
             > li {
-                display: flex;
-                align-items: center;
-                list-style: none;
-                white-space: nowrap;
-                justify-content: space-between;
-                padding: 22px;
-                border-radius: 12px;
-
-                &.nav {
-                    font-size: 16px;
-                    font-weight: 600;
-
-                    &:hover {
-                        background-color: transparent;
-                    }
-
-                    .menu {
-                        cursor: default;
-
-                        &:hover {
-                            background-color: transparent;
-                        }
-                    }
-                }
-
-                &:hover {
-                    background-color: rgb(41, 37, 36);
-                }
-
-                .name {
-                    width: 35%;
-                }
-
-                .release {
-                    width: 35%;
-                }
-
-                .state {
-                    width: 20%;
-                    display: flex;
-                    align-items: center;
-                    .load {
-                        flex-shrink: 0;
-                        width: 18px;
-                        height: 18px;
-                        margin-right: 5px;
-                    }
-                    .text {
-                        flex: 1;
-                    }
-                }
-
-                .menu {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    min-width: 32px;
-                    height: 32px;
-                    border-radius: 6px;
-                    cursor: pointer;
-
-                    &:hover {
-                        background-color: rgb(68, 64, 60);
-                    }
-                }
+                border-radius: 18px;
             }
         }
+
+        .item {
+            display: flex;
+            align-items: center;
+            list-style: none;
+            white-space: nowrap;
+            justify-content: space-between;
+            padding: 12px 0;
+
+            &.nav {
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 8px;
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .name {
+                width: 35%;
+            }
+
+            .release {
+                width: 35%;
+            }
+
+            .state {
+                width: 20%;
+                display: flex;
+                align-items: center;
+
+                .load {
+                    flex-shrink: 0;
+                    width: 16px;
+                    height: 16px;
+                    margin-right: 6px;
+                }
+
+                .text {
+                    flex: 1;
+                }
+            }
+
+            .menu {
+                min-width: 32px;
+                padding: 0;
+            }
+        }
+
     }
 }
 </style>

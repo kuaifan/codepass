@@ -18,9 +18,11 @@
         "axios": "^1.4.0",
         "less": "^4.1.2",
         "less-loader": "^10.2.0",
+        "localforage": "^1.10.0",
         "naive-ui": "^2.34.3",
         "unplugin-auto-import": "^0.15.3",
         "unplugin-vue-components": "^0.24.1",
-        "vite": "^4.3.2"
+        "vite": "^4.3.2",
+        "vue-router": "^4.1.6"
     }
 }

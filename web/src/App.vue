@@ -1,5 +1,5 @@
 <template>
-    <n-config-provider :theme="darkTheme">
+    <n-config-provider :theme-name="themeName" :theme="theme">
         <n-loading-bar-provider>
             <n-message-provider>
                 <n-notification-provider>
@@ -15,7 +15,7 @@
 
 <script lang="ts">
 import {defineComponent} from "vue";
-import {darkTheme} from 'naive-ui'
+import {siteSetup} from './store'
 
 import Workspaces from "./pages/Workspaces.vue";
 
@@ -24,9 +24,7 @@ export default defineComponent({
         Workspaces,
     },
     setup() {
-        return {
-            darkTheme,
-        }
+        return siteSetup()
     }
 });
 </script>

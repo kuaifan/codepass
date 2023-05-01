@@ -13,11 +13,10 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    border-bottom: 1px solid rgba(41, 37, 36, 0.8);
 
     .wrapper {
         flex: 1;
-        padding: 24px 0 32px;
+        padding: 24px 0 8px;
 
         .title {
             font-weight: 700;

@@ -1,3 +1,7 @@
+import localforage from "localforage";
+
+localforage.config({name: 'web', storeName: 'common'});
+
 const utils = {
     /**
      * 是否数组
@@ -208,6 +212,69 @@ const utils = {
         }
         return utils.rightDelete(url.replace("?&", "?"), '?');
     },
+
+    /**
+     * =============================================================================
+     * *****************************   localForage   ******************************
+     * =============================================================================
+     */
+    __IDBTimer: {},
+
+    IDBSave(key, value, delay = 100) {
+        if (typeof utils.__IDBTimer[key] !== "undefined") {
+            clearTimeout(utils.__IDBTimer[key])
+            delete utils.__IDBTimer[key]
+        }
+        utils.__IDBTimer[key] = setTimeout(async _ => {
+            await localforage.setItem(key, value)
+        }, delay)
+    },
+
+    IDBDel(key) {
+        localforage.removeItem(key).then(_ => {
+        })
+    },
+
+    IDBSet(key, value) {
+        return localforage.setItem(key, value)
+    },
+
+    IDBRemove(key) {
+        return localforage.removeItem(key)
+    },
+
+    IDBClear() {
+        return localforage.clear()
+    },
+
+    IDBValue(key) {
+        return localforage.getItem(key)
+    },
+
+    async IDBString(key, def = "") {
+        const value = await utils.IDBValue(key)
+        return typeof value === "string" || typeof value === "number" ? value : def;
+    },
+
+    async IDBInt(key, def = 0) {
+        const value = await utils.IDBValue(key)
+        return typeof value === "number" ? value : def;
+    },
+
+    async IDBBoolean(key, def = false) {
+        const value = await utils.IDBValue(key)
+        return typeof value === "boolean" ? value : def;
+    },
+
+    async IDBArray(key, def = []) {
+        const value = await utils.IDBValue(key)
+        return utils.isArray(value) ? value : def;
+    },
+
+    async IDBJson(key, def = {}) {
+        const value = await utils.IDBValue(key)
+        return utils.isJson(value) ? value : def;
+    }
 }
 
 export default utils
