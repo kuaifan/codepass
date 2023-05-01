@@ -1,4 +1,4 @@
 *_test.go
 /release/
-.codepass
+.codepass*
 codepass

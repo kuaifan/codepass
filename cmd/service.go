@@ -6,7 +6,13 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
+	"github.com/unrolled/secure"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -28,48 +34,99 @@ var serviceCmd = &cobra.Command{
 			utils.PrintError("无法写入文件")
 			os.Exit(1)
 		}
-		err = app.UpdateDomain()
-		if err != nil {
-			utils.PrintError(fmt.Sprintf("无法启动服务: %s", err.Error()))
+		if !utils.IsFile(app.ServiceConf.Key) {
+			utils.PrintError("SSL私钥路径错误")
 			os.Exit(1)
 		}
-		go time.AfterFunc(1*time.Second, func() {
-			_, url := app.InstanceDomain("")
-			utils.PrintSuccess(fmt.Sprintf("\n服务地址: %s\n", url))
-		})
+		if !utils.IsFile(app.ServiceConf.Crt) {
+			utils.PrintError("SSL证书路径错误")
+			os.Exit(1)
+		}
+		app.UpdateProxy()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		r := gin.Default()
-		r.GET("/certs/info", func(c *gin.Context) {
-			app.ServiceConf.CertsInfo(c)
+		router := gin.Default()
+		//
+		router.Any("/*path", func(c *gin.Context) {
+			domain := c.Request.Host
+			urlPath := c.Request.URL.Path
+			regFormat := fmt.Sprintf("^((\\d+)-)*([a-zA-Z][a-zA-Z0-9_]*)-code.%s", app.ServiceConf.Host)
+			if utils.Test(domain, regFormat) {
+				reg := regexp.MustCompile(regFormat)
+				match := reg.FindStringSubmatch(domain)
+				port := match[2]
+				name := match[3]
+				lose := true
+				for _, entry := range app.ProxyList {
+					if entry.Name == name {
+						c.Request.Header.Set("X-Real-Ip", c.ClientIP())
+						c.Request.Header.Set("X-Forwarded-For", c.ClientIP())
+						var targetUrl *url.URL
+						if port == "" {
+							targetUrl, _ = url.Parse(fmt.Sprintf("http://%s:55123", entry.Ip))
+						} else {
+							targetUrl, _ = url.Parse(fmt.Sprintf("http://%s:%s", entry.Ip, port))
+						}
+						proxy := httputil.NewSingleHostReverseProxy(targetUrl)
+						proxy.ServeHTTP(c.Writer, c.Request)
+						lose = false
+						break
+					}
+				}
+				if lose {
+					if port == "" {
+						c.String(http.StatusNotFound, fmt.Sprintf("%s not found", name))
+					} else {
+						c.String(http.StatusNotFound, fmt.Sprintf("%s(%s) not found", name, port))
+					}
+				}
+			} else {
+				if strings.HasPrefix(urlPath, "/api/workspaces/create") {
+					app.ServiceConf.WorkspacesCreate(c)
+				} else if strings.HasPrefix(urlPath, "/api/workspaces/create/log") {
+					app.ServiceConf.WorkspacesCreateLog(c)
+				} else if strings.HasPrefix(urlPath, "/api/workspaces/list") {
+					app.ServiceConf.WorkspacesList(c)
+				} else if strings.HasPrefix(urlPath, "/api/workspaces/info") {
+					app.ServiceConf.WorkspacesInfo(c)
+				} else if strings.HasPrefix(urlPath, "/api/workspaces/delete") {
+					app.ServiceConf.WorkspacesDelete(c)
+				} else if strings.HasPrefix(urlPath, "/assets") {
+					c.File(fmt.Sprintf("./web/dist%s", urlPath))
+				} else if urlPath == "/" {
+					c.File("./web/dist/index.html")
+				} else {
+					c.String(http.StatusNotFound, "404 not found")
+				}
+			}
 		})
-		r.POST("/certs/save", func(c *gin.Context) {
-			app.ServiceConf.CertsSave(c)
-		})
-		r.GET("/workspaces/create", func(c *gin.Context) {
-			app.ServiceConf.WorkspacesCreate(c)
-		})
-		r.GET("/workspaces/create/log", func(c *gin.Context) {
-			app.ServiceConf.WorkspacesCreateLog(c)
-		})
-		r.GET("/workspaces/list", func(c *gin.Context) {
-			app.ServiceConf.WorkspacesList(c)
-		})
-		r.GET("/workspaces/info", func(c *gin.Context) {
-			app.ServiceConf.WorkspacesInfo(c)
-		})
-		r.GET("/workspaces/delete", func(c *gin.Context) {
-			app.ServiceConf.WorkspacesDelete(c)
-		})
-		r.GET("/others/domain/update", func(c *gin.Context) {
-			app.ServiceConf.OthersDomainUpdate(c)
-		})
-		_ = r.Run(fmt.Sprintf("%s:%s", app.ServiceConf.Ip, app.ServiceConf.Port))
+		//
+		router.Use(tlsHandler())
+		err := router.RunTLS(fmt.Sprintf(":%s", app.ServiceConf.Port), app.ServiceConf.Crt, app.ServiceConf.Key)
+		if err != nil {
+			utils.PrintError(err.Error())
+		}
 	},
+}
+
+func tlsHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		secureMiddleware := secure.New(secure.Options{
+			SSLRedirect: true,
+			SSLHost:     fmt.Sprintf("%s:%s", app.ServiceConf.Host, app.ServiceConf.Port),
+		})
+		err := secureMiddleware.Process(c.Writer, c.Request)
+		if err != nil {
+			return
+		}
+		c.Next()
+	}
 }
 
 func init() {
 	rootCmd.AddCommand(serviceCmd)
-	serviceCmd.Flags().StringVar(&app.ServiceConf.Ip, "ip", "0.0.0.0", "启动服务的IP")
-	serviceCmd.Flags().StringVar(&app.ServiceConf.Port, "port", "8080", "启动服务的端口")
+	serviceCmd.Flags().StringVar(&app.ServiceConf.Host, "host", "0.0.0.0", "主机地址或IP")
+	serviceCmd.Flags().StringVar(&app.ServiceConf.Port, "port", "443", "服务端口")
+	serviceCmd.Flags().StringVar(&app.ServiceConf.Key, "key", "", "SSL私钥路径(KEY)")
+	serviceCmd.Flags().StringVar(&app.ServiceConf.Crt, "crt", "", "SSL证书路径(PEM格式)")
 }

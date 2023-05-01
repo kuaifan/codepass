@@ -32,36 +32,6 @@ ERR() {
 	exit 1
 }
 
-# 检测 docker
-check_docker() {
-	docker --version &> /dev/null
-	if [ $? -ne  0 ]; then
-		echo "安装docker环境..."
-		curl -sSL https://get.daocloud.io/docker | sh
-		OK "Docker环境安装完成"
-	fi
-	if [ "$(uname)" == "Linux" ]; then
-		systemctl start docker
-		if [[ 0 -ne $? ]]; then
-			ERR "Docker 启动 失败"
-		fi
-	fi
-	#
-	docker-compose --version &> /dev/null
-	if [ $? -ne  0 ]; then
-		echo "安装docker-compose..."
-		curl -s -L "https://get.daocloud.io/docker/compose/releases/download/v2.17.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-		chmod +x /usr/local/bin/docker-compose
-		ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-		OK "Docker-compose安装完成"
-		if [ "$(uname)" == "Linux" ]; then
-			service docker restart
-		fi
-	fi
-	#
-	docker pull openresty/openresty:alpine
-}
-
 # 检测 multipass
 check_multipass() {
 	multipass version &> /dev/null
@@ -95,7 +65,6 @@ check_multipass() {
 }
 
 # 运行脚本
-check_docker
 check_multipass
 OK "安装完成"
 
@@ -111,19 +80,19 @@ const CreateExecContent = string(`
 CmdPath=$0
 
 # 全局变量
-NAME="{{.NAME}}"
-PASS="{{.PASS}}"
-PROXY_DOMAIN="{{.PROXY_DOMAIN}}"
-PROXY_URI="{{.PROXY_URI}}"
+# {{.NAME}}
+# {{.PASS}}
+# {{.PROXY_DOMAIN}}
+# {{.PROXY_URI}}
 
-CPUS="{{.CPUS}}"
-DISK="{{.DISK}}"
-MEMORY="{{.MEMORY}}"
+# {{.CPUS}}
+# {{.DISK}}
+# {{.MEMORY}}
 
 # 保存状态
 CREATE() {
 	echo "$1"
-	echo "$1" > {{.RUN_PATH}}/.codepass/workspaces/$NAME/create
+	echo "$1" > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/create
 }
 
 # 准备工作
@@ -136,38 +105,38 @@ runcmd:
   - sudo curl -sSL https://get.daocloud.io/docker | sh
   - sudo systemctl start docker
 EOF
-mkdir -p {{.RUN_PATH}}/.codepass/workspaces/$NAME/config
-mkdir -p {{.RUN_PATH}}/.codepass/workspaces/$NAME/workspace
+mkdir -p {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config
+mkdir -p {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/workspace
 
 # 启动虚拟机
 CREATE "Launching"
-start="multipass launch focal --name $NAME"
+start="multipass launch focal --name {{.NAME}}"
 start="$start --cloud-init {{.RUN_PATH}}/.codepass/workspaces/config.yaml"
-start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/$NAME/config:~/.config"
-start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/$NAME/workspace:~/workspace"
-[ -n "$CPUS" ] && start="$start --cpus $CPUS"
-[ -n "$DISK" ] && start="$start --disk $DISK"
-[ -n "$MEMORY" ] && start="$start --memory $MEMORY"
+start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config:~/.config"
+start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/workspace:~/workspace"
+[ -n "{{.CPUS}}" ] && start="$start --cpus {{.CPUS}}"
+[ -n "{{.DISK}}" ] && start="$start --disk {{.DISK}}"
+[ -n "{{.MEMORY}}" ] && start="$start --memory {{.MEMORY}}"
 $start
 
 # 安装 code-server
 CREATE "Installing"
-multipass exec $NAME -- sh -c 'curl -fsSL https://code-server.dev/install.sh | sh'
+multipass exec {{.NAME}} -- sh -c 'curl -fsSL https://code-server.dev/install.sh | sh'
 
 # 初始化 code-server 配置
 CREATE "Configuring"
-multipass exec $NAME -- sh <<-EOE
+multipass exec {{.NAME}} -- sh <<-EOE
 mkdir -p ~/.config/code-server
 cat > ~/.config/code-server/config.yaml <<-EOF
 bind-addr: 0.0.0.0:55123
 auth: password
-password: $PASS
+password: {{.PASS}}
 cert: false
 EOF
 EOE
 
 # 优化 code-server 页面资源
-multipass exec $NAME -- sudo sh <<-EOE
+multipass exec {{.NAME}} -- sudo sh <<-EOE
 echo ".card-box > .header {display:none}" >> /usr/lib/code-server/src/browser/pages/login.css
 rm -f /usr/lib/code-server/src/browser/media/pwa-icon-192.png
 rm -f /usr/lib/code-server/src/browser/media/pwa-icon-512.png
@@ -177,10 +146,10 @@ EOE
 
 # 启动 code-server
 CREATE "Starting"
-multipass exec $NAME -- sudo sh <<-EOE
+multipass exec {{.NAME}} -- sudo sh <<-EOE
 sudo ln -s ~/workspace /workspace
-systemctl set-environment PROXY_DOMAIN=$PROXY_DOMAIN
-systemctl set-environment VSCODE_PROXY_URI=$PROXY_URI
+systemctl set-environment PROXY_DOMAIN={{.PROXY_DOMAIN}}
+systemctl set-environment VSCODE_PROXY_URI={{.PROXY_URI}}
 systemctl set-environment DEFAULT_WORKSPACE=/workspace
 systemctl enable --now code-server@ubuntu
 if [ 0 -eq \$? ]; then
@@ -189,7 +158,7 @@ else
 	echo "error" > /tmp/.code-server
 fi
 EOE
-server=$(multipass exec $NAME -- sh -c 'cat /tmp/.code-server')
+server=$(multipass exec {{.NAME}} -- sh -c 'cat /tmp/.code-server')
 if [ "$server" != "success" ]; then
 	CREATE "Failed"
 	rm -f $CmdPath
@@ -197,153 +166,13 @@ if [ "$server" != "success" ]; then
 fi
 
 # 保存密码
-echo "$PASS" > {{.RUN_PATH}}/.codepass/workspaces/$NAME/pass
+echo "{{.PASS}}" > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/pass
 
 # 输出成功
 CREATE "Success"
 
 # 删除脚本
 rm -f $CmdPath
-`)
-
-// NginxUpsteamLua nginx lua配置
-const NginxUpsteamLua = string(`
-local ip = ngx.arg[1];
-local host = ngx.var.host;
-local pattern = "(%d+)-"
-local port = string.match(host, pattern)
-
-if port then
-    return string.format("%s:%s", ip, port)
-else
-    return string.format("%s:55123", ip)
-end
-`)
-
-// NginxDefaultConf nginx 默认配置
-const NginxDefaultConf = string(`
-# {{.MAIN_DOMAIN}}
-# {{.SERVICE_PORT}}
-
-map $http_upgrade $connection_upgrade {
-	default upgrade;
-	'' close;
-}
-map $http_host $this_host {
-	"" $host;
-	default $http_host;
-}
-map $http_x_forwarded_proto $the_scheme {
-	 default $http_x_forwarded_proto;
-	 "" $scheme;
-}
-map $http_x_forwarded_host $the_host {
-	default $http_x_forwarded_host;
-	"" $this_host;
-}
-
-server {
-	listen 80;
-	listen 443 ssl http2;
-	server_name {{.MAIN_DOMAIN}};
-	index index.html index.htm;
-    root /web/dist;
-
-	if ($server_port !~ 443){
-		rewrite ^(/.*)$ https://$host$1 permanent;
-	}
-
-	ssl_certificate /etc/nginx/cert/crt;
-	ssl_certificate_key /etc/nginx/cert/key;
-	
-	ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
-	ssl_ciphers EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
-	ssl_prefer_server_ciphers on;
-	ssl_session_cache shared:SSL:10m;
-	ssl_session_timeout 10m;
-
-	location /api/ {
-        proxy_http_version 1.1;
-        proxy_set_header Connection "";
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Real-PORT $remote_port;
-        proxy_set_header X-Forwarded-Host $the_host/api;
-        proxy_set_header X-Forwarded-Proto $the_scheme;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header Host $http_host;
-        proxy_set_header Scheme $scheme;
-        proxy_set_header Server-Protocol $server_protocol;
-        proxy_set_header Server-Name $server_name;
-        proxy_set_header Server-Addr $server_addr;
-        proxy_set_header Server-Port $server_port;
-        proxy_pass http://host.docker.internal:{{.SERVICE_PORT}}/;
-    }
-}
-`)
-
-// NginxDomainConf nginx 域名配置
-const NginxDomainConf = string(`
-# {{.IP}}
-# {{.DOMAIN}}
-
-server {
-	listen 80;
-	listen 443 ssl http2;
-	server_name ~^(\d+)?{{.DOMAIN}}$;
-
-	if ($server_port !~ 443){
-		rewrite ^(/.*)$ https://$host$1 permanent;
-	}
-
-	ssl_certificate /etc/nginx/cert/crt;
-	ssl_certificate_key /etc/nginx/cert/key;
-	
-	ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
-	ssl_ciphers EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
-	ssl_prefer_server_ciphers on;
-	ssl_session_cache shared:SSL:10m;
-	ssl_session_timeout 10m;
-
-	location / {
-		set_by_lua_file $ups /etc/nginx/lua/upsteam.lua {{.IP}};
-		proxy_http_version 1.1;
-		proxy_set_header X-Real-IP $remote_addr;
-		proxy_set_header X-Real-PORT $remote_port;
-		proxy_set_header X-Forwarded-Host $the_host;
-		proxy_set_header X-Forwarded-Proto $the_scheme;
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		proxy_set_header Host $http_host;
-		proxy_set_header Scheme $scheme;
-		proxy_set_header Server-Protocol $server_protocol;
-		proxy_set_header Server-Name $server_name;
-		proxy_set_header Server-Addr $server_addr;
-		proxy_set_header Server-Port $server_port;
-		proxy_set_header Upgrade $http_upgrade;
-		proxy_set_header Connection $connection_upgrade;
-		proxy_pass http://$ups;
-	}
-}
-`)
-
-// DockerComposeContent docker-compose 配置
-const DockerComposeContent = string(`
-# {{.HTTP_PORT}}
-# {{.HTTPS_PORT}}
-
-version: '3'
-
-services:
-  nginx:
-    image: "openresty/openresty:alpine"
-    ports:
-      - "{{.HTTP_PORT}}:80"
-      - "{{.HTTPS_PORT}}:443"
-    volumes:
-      - {{.RUN_PATH}}/.codepass/nginx/cert:/etc/nginx/cert
-      - {{.RUN_PATH}}/.codepass/nginx/lua:/etc/nginx/lua
-      - {{.RUN_PATH}}/.codepass/nginx/conf.d:/etc/nginx/conf.d
-      - {{.RUN_PATH}}/web/dist:/web/dist
-    restart: unless-stopped
 `)
 
 // TemplateContent 从模板中获取内容

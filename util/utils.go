@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/spf13/viper"
 	"io"
 	"math/big"
 	"math/rand"
@@ -327,24 +326,6 @@ func GinInput(c *gin.Context, key string) string {
 		return strings.TrimSpace(c.PostForm(key))
 	}
 	return strings.TrimSpace(c.Query(key))
-}
-
-// GetProtsConfig 获取端口配置
-func GetProtsConfig() (string, string) {
-	envFile := ".env"
-	if Exists(envFile) {
-		viper.SetConfigFile(envFile)
-		_ = viper.ReadInConfig()
-	}
-	httpPort := viper.GetString("HTTP_PORT")
-	httpsPort := viper.GetString("HTTPS_PORT")
-	if httpPort == "" {
-		httpPort = "80"
-	}
-	if httpsPort == "" {
-		httpsPort = "443"
-	}
-	return httpPort, httpsPort
 }
 
 // RunDir 前面加上绝对路径

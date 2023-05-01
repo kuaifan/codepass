@@ -3,15 +3,21 @@ package app
 import (
 	utils "codepass/util"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
 )
 
 type ServiceModel struct {
-	Ip   string
+	Host string
 	Port string
+	Crt  string
+	Key  string
+}
+
+type ProxyModel struct {
+	Name string
+	Ip   string
 }
 
 type infoModel struct {
@@ -39,6 +45,7 @@ type instanceModel struct {
 
 var (
 	ServiceConf ServiceModel
+	ProxyList   []ProxyModel
 )
 
 // 获取工作区列表
@@ -89,68 +96,30 @@ func instanceBase(entry *instanceModel) *instanceModel {
 	}
 	entry.Create = strings.TrimSpace(utils.ReadFile(createFile))
 	entry.Pass = strings.TrimSpace(utils.ReadFile(passFile))
-	entry.Domain, entry.Url = InstanceDomain(name)
+	entry.Domain, entry.Url = instanceDomain(name)
 	return entry
 }
 
-// InstanceDomain 获取[工作区]域名
-func InstanceDomain(name string) (string, string) {
-	domainFile := utils.RunDir("/.codepass/nginx/cert/domain")
-	if utils.IsFile(domainFile) {
-		domainAddr := strings.TrimSpace(utils.ReadFile(domainFile))
-		if name != "" {
-			domainAddr = fmt.Sprintf("%s-code.%s", name, domainAddr)
-		}
-		_, httpsPort := utils.GetProtsConfig()
-		if httpsPort == "443" {
-			return domainAddr, fmt.Sprintf("https://%s", domainAddr)
-		} else {
-			return domainAddr, fmt.Sprintf("https://%s:%s", domainAddr, httpsPort)
-		}
+// 获取[工作区]域名
+func instanceDomain(name string) (string, string) {
+	domainAddr := ServiceConf.Host
+	if name != "" {
+		domainAddr = fmt.Sprintf("%s-code.%s", name, domainAddr)
 	}
-	return "", ""
+	if ServiceConf.Port == "443" {
+		return domainAddr, fmt.Sprintf("https://%s", domainAddr)
+	} else {
+		return domainAddr, fmt.Sprintf("https://%s:%s", domainAddr, ServiceConf.Port)
+	}
 }
 
-// UpdateDomain 更新工作区域名
-func UpdateDomain() error {
-	mainDomain, _ := InstanceDomain("")
-	if mainDomain == "" {
-		return errors.New("no domain")
-	}
-	err := utils.WriteFile(utils.RunDir("/.codepass/nginx/lua/upsteam.lua"), utils.TemplateContent(utils.NginxUpsteamLua, map[string]any{}))
-	if err != nil {
-		return err
-	}
-	var list []string
-	list = append(list, utils.TemplateContent(utils.NginxDefaultConf, map[string]any{
-		"MAIN_DOMAIN":  mainDomain,
-		"SERVICE_PORT": ServiceConf.Port,
-	}))
+// UpdateProxy 更新代理地址
+func UpdateProxy() {
+	ProxyList = []ProxyModel{}
 	for _, entry := range workspacesList() {
-		if entry.Ip != "" && entry.Domain != "" {
-			list = append(list, utils.TemplateContent(utils.NginxDomainConf, map[string]any{
-				"DOMAIN": entry.Domain,
-				"IP":     entry.Ip,
-			}))
-		}
+		ProxyList = append(ProxyList, ProxyModel{
+			Name: entry.Name,
+			Ip:   entry.Ip,
+		})
 	}
-	err = utils.WriteFile(utils.RunDir("/.codepass/nginx/conf.d/default.conf"), strings.Join(list, "\n"))
-	if err != nil {
-		return err
-	}
-	//
-	httpPort, httpsPort := utils.GetProtsConfig()
-	err = utils.WriteFile(utils.RunDir("/.codepass/docker/docker-compose.yml"), utils.TemplateContent(utils.DockerComposeContent, map[string]any{
-		"HTTP_PORT":  httpPort,
-		"HTTPS_PORT": httpsPort,
-	}))
-	if err != nil {
-		return err
-	}
-	_, _ = utils.Cmd("-c", fmt.Sprintf("docker-compose -f %s down", utils.RunDir("/.codepass/docker/docker-compose.yml")))
-	_, err = utils.Cmd("-c", fmt.Sprintf("docker-compose -f %s up -d --remove-orphans", utils.RunDir("/.codepass/docker/docker-compose.yml")))
-	if err != nil {
-		return err
-	}
-	return nil
 }

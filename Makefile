@@ -18,8 +18,11 @@ all:
 build:
 	env CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o .
 
+install: build
+	./codepass install
+
 service: build
-	./codepass service
+	./codepass service --host=eeui.app --port=3443 --key=/Users/GAOYI/Downloads/eeui-app-nginx/app_key.key --crt=/Users/GAOYI/Downloads/eeui-app-nginx/app_chain.crt
 
 clean:
 	@rm -f ./codepass

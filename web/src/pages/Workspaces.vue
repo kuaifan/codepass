@@ -1,6 +1,6 @@
 <template>
     <div class="workspaces">
-        <Header @domainSave="domainSave"/>
+        <Header/>
         <Banner/>
 
         <!-- 搜索 -->
@@ -243,9 +243,6 @@ export default defineComponent({
             createModal.value = false
             onLoad(true)
         }
-        const domainSave = () => {
-            onLoad(true)
-        }
         const stateLoading = (item) => {
             return item.create !== 'Success' && item.state !== 'Failed'
         }
@@ -304,7 +301,6 @@ export default defineComponent({
             operationSelect,
             addIcon,
             createDone,
-            domainSave,
             stateLoading,
             stateText,
             onState,
