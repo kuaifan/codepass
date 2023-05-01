@@ -69,15 +69,17 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	}
 	// 端口代理地址
 	_, url := instanceDomain(name)
-	sampleRegexp := regexp.MustCompile(`^(https*://)`)
-	proxyUri := sampleRegexp.ReplaceAllString(url, "$1{{port}}-")
+	proxyRegexp := regexp.MustCompile(`^(https*://)`)
+	proxyDomain := proxyRegexp.ReplaceAllString(url, "")
+	proxyUri := proxyRegexp.ReplaceAllString(url, "$1{{port}}-")
 	// 生成创建脚本
 	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.sh", name))
 	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.log", name))
 	err := utils.WriteFile(cmdFile, utils.TemplateContent(utils.CreateExecContent, map[string]any{
-		"NAME":      name,
-		"PASS":      pass,
-		"PROXY_URI": proxyUri,
+		"NAME":         name,
+		"PASS":         pass,
+		"PROXY_DOMAIN": proxyDomain,
+		"PROXY_URI":    proxyUri,
 
 		"CPUS":   cpus,
 		"DISK":   disk,

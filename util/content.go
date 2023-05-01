@@ -111,6 +111,7 @@ CmdPath=$0
 # 全局变量
 NAME="{{.NAME}}"
 PASS="{{.PASS}}"
+PROXY_DOMAIN="{{.PROXY_DOMAIN}}"
 PROXY_URI="{{.PROXY_URI}}"
 
 CPUS="{{.CPUS}}"
@@ -123,9 +124,25 @@ CREATE() {
 	echo "$1" > {{.RUN_PATH}}/.codepass/workspaces/$NAME/create
 }
 
+# 准备工作
+CREATE "Preparing"
+cat > {{.RUN_PATH}}/.codepass/workspaces/config.yaml <<-EOF
+#cloud-config
+runcmd:
+  - curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+  - sudo apt-get install -y nodejs
+  - sudo curl -sSL https://get.daocloud.io/docker | sh
+  - sudo systemctl start docker
+EOF
+mkdir -p {{.RUN_PATH}}/.codepass/workspaces/$NAME/config
+mkdir -p {{.RUN_PATH}}/.codepass/workspaces/$NAME/workspace
+
 # 启动虚拟机
 CREATE "Launching"
 start="multipass launch focal --name $NAME"
+start="$start --cloud-init {{.RUN_PATH}}/.codepass/workspaces/config.yaml"
+start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/$NAME/config:/config"
+start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/$NAME/workspace:/workspace"
 [ -n "$CPUS" ] && start="$start --cpus $CPUS"
 [ -n "$DISK" ] && start="$start --disk $DISK"
 [ -n "$MEMORY" ] && start="$start --memory $MEMORY"
@@ -135,7 +152,7 @@ $start
 CREATE "Installing"
 multipass exec $NAME -- sh -c 'curl -fsSL https://code-server.dev/install.sh | sh'
 
-# 初始化配置
+# 初始化 code-server 配置
 CREATE "Configuring"
 multipass exec $NAME -- sh <<-EOE
 mkdir -p ~/.config/code-server
@@ -148,7 +165,7 @@ cert: false
 EOF
 EOE
 
-# 优化页面资源
+# 优化 code-server 页面资源
 multipass exec $NAME -- sudo sh <<-EOE
 echo ".card-box > .header {display:none}" >> /usr/lib/code-server/src/browser/pages/login.css
 rm -f /usr/lib/code-server/src/browser/media/pwa-icon-192.png
@@ -160,7 +177,9 @@ EOE
 # 启动 code-server
 CREATE "Starting"
 multipass exec $NAME -- sudo sh <<-EOE
+systemctl set-environment PROXY_DOMAIN=$PROXY_DOMAIN
 systemctl set-environment VSCODE_PROXY_URI=$PROXY_URI
+systemctl set-environment DEFAULT_WORKSPACE=/workspace
 systemctl enable --now code-server@ubuntu
 if [ 0 -eq \$? ]; then
 	echo "success" > /tmp/.code-server
