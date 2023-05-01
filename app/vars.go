@@ -124,7 +124,8 @@ func updateDomain() error {
 	}
 	var list []string
 	list = append(list, utils.TemplateContent(utils.NginxDefaultConf, map[string]any{
-		"DOMAIN": domainAddr,
+		"MAIN_DOMAIN":  domainAddr,
+		"SERVICE_PORT": ServiceConf.Port,
 	}))
 	for _, entry := range workspacesList() {
 		if entry.Ip != "" && entry.Domain != "" {

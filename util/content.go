@@ -222,7 +222,8 @@ end
 
 // NginxDefaultConf nginx 默认配置
 const NginxDefaultConf = string(`
-# {{.DOMAIN}}
+# {{.MAIN_DOMAIN}}
+# {{.SERVICE_PORT}}
 
 map $http_upgrade $connection_upgrade {
 	default upgrade;
@@ -244,7 +245,7 @@ map $http_x_forwarded_host $the_host {
 server {
 	listen 80;
 	listen 443 ssl http2;
-	server_name {{.DOMAIN}};
+	server_name {{.MAIN_DOMAIN}};
 	index index.html index.htm;
     root /web/dist;
 
@@ -275,7 +276,7 @@ server {
         proxy_set_header Server-Name $server_name;
         proxy_set_header Server-Addr $server_addr;
         proxy_set_header Server-Port $server_port;
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://host.docker.internal:{{.SERVICE_PORT}};
     }
 }
 `)
