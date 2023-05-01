@@ -165,9 +165,6 @@ if [ "$server" != "success" ]; then
 	exit 1
 fi
 
-# 保存密码
-echo "{{.PASS}}" > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/pass
-
 # 输出成功
 CREATE "Success"
 

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -208,13 +209,14 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 		info = result
 	}
 	createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
-	passFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/pass", name))
+	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/code-server/config.yaml", name)))
+	_ = viper.ReadInConfig()
 	c.JSON(http.StatusOK, gin.H{
 		"ret": 1,
 		"msg": "获取成功",
 		"data": gin.H{
 			"create": strings.TrimSpace(utils.ReadFile(createFile)),
-			"pass":   strings.TrimSpace(utils.ReadFile(passFile)),
+			"pass":   viper.GetString("password"),
 			"info":   info,
 		},
 	})

@@ -4,6 +4,7 @@ import (
 	utils "codepass/util"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 	"os"
 	"strings"
 )
@@ -90,12 +91,13 @@ func workspacesList() []*instanceModel {
 func instanceBase(entry *instanceModel) *instanceModel {
 	name := entry.Name
 	createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
-	passFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/pass", name))
+	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/code-server/config.yaml", name)))
+	_ = viper.ReadInConfig()
 	if len(entry.Ipv4) > 0 {
 		entry.Ip = entry.Ipv4[0]
 	}
 	entry.Create = strings.TrimSpace(utils.ReadFile(createFile))
-	entry.Pass = strings.TrimSpace(utils.ReadFile(passFile))
+	entry.Pass = viper.GetString("password")
 	entry.Domain, entry.Url = instanceDomain(name)
 	return entry
 }

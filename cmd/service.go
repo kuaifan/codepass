@@ -93,10 +93,8 @@ var serviceCmd = &cobra.Command{
 					app.ServiceConf.WorkspacesDelete(c)
 				} else if strings.HasPrefix(urlPath, "/assets") {
 					c.File(fmt.Sprintf("./web/dist%s", urlPath))
-				} else if urlPath == "/" {
-					c.File("./web/dist/index.html")
 				} else {
-					c.String(http.StatusNotFound, "404 not found")
+					c.File("./web/dist/index.html")
 				}
 			}
 		})
