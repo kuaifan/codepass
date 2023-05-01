@@ -207,7 +207,7 @@ export default defineComponent({
                     )
                 }
                 if (option.key === 'open' && operationItem.value.url) {
-                    const action = operationItem.value.url + "/login"
+                    const action = operationItem.value.url + "/login?folder=/workspace"
                     return h('form',
                         {
                             action,

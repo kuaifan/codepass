@@ -58,6 +58,8 @@ check_docker() {
 			service docker restart
 		fi
 	fi
+	#
+	docker pull openresty/openresty:alpine
 }
 
 # 检测 multipass
@@ -224,16 +226,24 @@ map $http_x_forwarded_host $the_host {
 }
 `)
 
+// NginxUpsteamLua nginx lua配置
+const NginxUpsteamLua = string(`
+local ip = ngx.arg[1];
+local host = ngx.var.host;
+local pattern = "(%d+)-"
+local port = string.match(host, pattern)
+
+if port then
+    return string.format("%s:%s", ip, port)
+else
+    return string.format("%s:55123", ip)
+end
+`)
+
 // NginxDomainConf nginx 域名配置
 const NginxDomainConf = string(`
-# {{.NAME}}
 # {{.IP}}
 # {{.DOMAIN}}
-
-upstream server_{{.NAME}} {
-	server {{.IP}}:55123 weight=5 max_fails=3 fail_timeout=30s;
-	keepalive 16;
-}
 
 server {
 	listen 80;
@@ -254,6 +264,7 @@ server {
 	ssl_session_timeout 10m;
 
 	location / {
+		set_by_lua_file $ups /etc/nginx/lua/upsteam.lua {{.IP}};
 		proxy_http_version 1.1;
 		proxy_set_header X-Real-IP $remote_addr;
 		proxy_set_header X-Real-PORT $remote_port;
@@ -268,7 +279,7 @@ server {
 		proxy_set_header Server-Port $server_port;
 		proxy_set_header Upgrade $http_upgrade;
 		proxy_set_header Connection $connection_upgrade;
-		proxy_pass http://server_{{.NAME}};
+		proxy_pass http://$ups;
 	}
 }
 `)
@@ -282,12 +293,13 @@ version: '3'
 
 services:
   nginx:
-    image: "nginx:alpine"
+    image: "openresty/openresty:alpine"
     ports:
       - "{{.HTTP_PORT}}:80"
       - "{{.HTTPS_PORT}}:443"
     volumes:
       - {{.RUN_PATH}}/.codepass/nginx/cert:/etc/nginx/cert
+      - {{.RUN_PATH}}/.codepass/nginx/lua:/etc/nginx/lua
       - {{.RUN_PATH}}/.codepass/nginx/conf.d:/etc/nginx/conf.d
     restart: unless-stopped
 `)

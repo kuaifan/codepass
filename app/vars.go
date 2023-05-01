@@ -109,18 +109,21 @@ func instanceDomain(name string) (string, string) {
 
 // 更新工作区域名
 func updateDomain() error {
+	err := utils.WriteFile(utils.RunDir("/.codepass/nginx/lua/upsteam.lua"), utils.TemplateContent(utils.NginxUpsteamLua, map[string]any{}))
+	if err != nil {
+		return err
+	}
 	var list []string
 	list = append(list, utils.TemplateContent(utils.NginxDefaultConf, map[string]any{}))
 	for _, entry := range workspacesList() {
 		if entry.Ip != "" && entry.Domain != "" {
 			list = append(list, utils.TemplateContent(utils.NginxDomainConf, map[string]any{
-				"NAME":   entry.Name,
 				"DOMAIN": entry.Domain,
 				"IP":     entry.Ip,
 			}))
 		}
 	}
-	err := utils.WriteFile(utils.RunDir("/.codepass/nginx/conf.d/default.conf"), strings.Join(list, "\n"))
+	err = utils.WriteFile(utils.RunDir("/.codepass/nginx/conf.d/default.conf"), strings.Join(list, "\n"))
 	if err != nil {
 		return err
 	}
