@@ -224,13 +224,13 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 func (model *ServiceModel) WorkspacesDelete(c *gin.Context) {
 	name := c.Query("name")
 	//
-	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
-	if utils.IsDir(dirPath) {
-		_, _ = utils.Cmd("-c", fmt.Sprintf("rm -rf %s", dirPath)) // 删除工作区目录
-	}
 	_, err := utils.Cmd("-c", fmt.Sprintf("multipass info %s", name))
 	if err == nil {
 		_, err = utils.Cmd("-c", fmt.Sprintf("multipass delete --purge %s", name)) // 删除工作区
+	}
+	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
+	if utils.IsDir(dirPath) {
+		_, _ = utils.Cmd("-c", fmt.Sprintf("rm -rf %s", dirPath)) // 删除工作区目录
 	}
 	_ = updateDomain()
 	if err != nil {
