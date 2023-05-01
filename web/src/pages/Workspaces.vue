@@ -51,7 +51,10 @@
                     <li v-for="item in searchList">
                         <div class="name">{{ item.name }}</div>
                         <div class="release">{{ item.release || '-' }}</div>
-                        <div class="state">{{ state(item) }}</div>
+                        <div class="state" @click="onState(item)">
+                            <div v-if="stateLoading(item)" class="load"><Loading/></div>
+                            <div class="text">{{ stateText(item) }}</div>
+                        </div>
                         <n-dropdown
                                 trigger="click"
                                 :show-arrow="true"
@@ -154,8 +157,110 @@ export default defineComponent({
                 key: "delete",
             }
         ])
-        const operationItem = ref({})
+        const operationItem = ref({url: '', pass: ''})
 
+        const operationLabel = (option) => {
+            if (option.disabled === true) {
+                return option.label as VNodeChild
+            }
+            if (option.key === 'delete') {
+                return h(
+                    'span',
+                    {
+                        style: 'color:rgb(248,113,113);height:34px;display:flex;align-items:center',
+                    },
+                    {
+                        default: () => option.label as VNodeChild
+                    }
+                )
+            }
+            if (option.key === 'open' && operationItem.value.url) {
+                const action = operationItem.value.url + "/login?folder=/workspace"
+                return h('form',
+                    {
+                        action,
+                        method: 'post',
+                        target: '_blank'
+                    },
+                    [
+                        h('input', {type: 'hidden', name: 'base', value: '.'}),
+                        h('input', {type: 'hidden', name: 'href', value: action}),
+                        h('input', {type: 'hidden', name: 'password', value: operationItem.value.pass}),
+                        h(NButton, {
+                            text: true,
+                            attrType: 'submit'
+                        }, {
+                            default: () => option.label as VNodeChild
+                        }),
+                    ])
+            }
+            return option.label as VNodeChild
+        }
+        const operationShow = (show: boolean, item) => {
+            if (show) {
+                operationItem.value = item
+                operationMenu.value[0]['disabled'] = !(item.create === "Success" && item.state === "Running" && /^https*:\/\//.test(item.url))
+            }
+        }
+        const operationSelect = (key: string | number, item) => {
+            if (key === 'info') {
+                infoName.value = item.name
+                infoModal.value = true
+            } else if (key === 'log') {
+                logName.value = item.name
+                logModal.value = true
+            } else if (key === 'delete') {
+                const dd = dialog.warning({
+                    title: '删除工作区',
+                    content: '确定要删除该工作区吗？',
+                    positiveText: '确定',
+                    negativeText: '取消',
+                    onPositiveClick: () => {
+                        dd.loading = true
+                        return new Promise((resolve) => {
+                            call({
+                                method: "get",
+                                url: 'workspaces/delete',
+                                data: {
+                                    name: item.name
+                                }
+                            }).then(({msg}) => {
+                                message.success(msg)
+                                items.value = items.value.filter(i => i.name !== item.name)
+                            }).catch(({msg}) => {
+                                message.error(msg)
+                                onLoad(false)
+                            }).finally(resolve)
+                        })
+                    }
+                })
+            }
+        }
+        const addIcon = () => {
+            return h(AddOutline);
+        }
+        const createDone = () => {
+            createModal.value = false
+            onLoad(true)
+        }
+        const domainSave = () => {
+            onLoad(true)
+        }
+        const stateLoading = (item) => {
+            return item.create !== 'Success' && item.state !== 'Failed'
+        }
+        const stateText = (item) => {
+            if (item.create === 'Success') {
+                return item.state || 'Unknown'
+            } else {
+                return item.create || 'Error'
+            }
+        }
+        const onState = (item) => {
+            if (stateLoading(item)) {
+                operationSelect('log', item)
+            }
+        }
         const onLoad = (tip) => {
             if (loadIng.value) {
                 return
@@ -177,9 +282,9 @@ export default defineComponent({
                 loadIng.value = false
             })
         }
+
         onLoad(false)
         const loadInter = setInterval(_ => onLoad(false), 1000 * 30)
-
         onBeforeUnmount(() => {
             clearInterval(loadInter)
         })
@@ -194,101 +299,17 @@ export default defineComponent({
             searchKey,
             searchList,
             operationMenu,
-            operationLabel(option) {
-                if (option.key === 'delete') {
-                    return h(
-                        'span',
-                        {
-                            style: 'color:rgb(248,113,113);height:34px;display:flex;align-items:center',
-                        },
-                        {
-                            default: () => option.label as VNodeChild
-                        }
-                    )
-                }
-                if (option.key === 'open' && operationItem.value.url) {
-                    const action = operationItem.value.url + "/login?folder=/workspace"
-                    return h('form',
-                        {
-                            action,
-                            method: 'post',
-                            target: '_blank'
-                        },
-                        [
-                            h('input', {type: 'hidden', name: 'base', value: '.'}),
-                            h('input', {type: 'hidden', name: 'href', value: action}),
-                            h('input', {type: 'hidden', name: 'password', value: operationItem.value.pass}),
-                            h(NButton, {
-                                text: true,
-                                attrType: 'submit'
-                            }, {
-                                default: () => option.label as VNodeChild
-                            }),
-                        ])
-                }
-                return option.label as VNodeChild
-            },
-            operationShow(show: boolean, item) {
-                if (show) {
-                    operationItem.value = item
-                    operationMenu.value[0]['disabled'] = !(item.create === "Success" && item.state === "Running" && /^https*:\/\//.test(item.url))
-                }
-            },
-            operationSelect(key: string | number, item) {
-                if (key === 'info') {
-                    infoName.value = item.name
-                    infoModal.value = true
-                } else if (key === 'log') {
-                    logName.value = item.name
-                    logModal.value = true
-                } else if (key === 'delete') {
-                    const dd = dialog.warning({
-                        title: '删除工作区',
-                        content: '确定要删除该工作区吗？',
-                        positiveText: '确定',
-                        negativeText: '取消',
-                        onPositiveClick: () => {
-                            dd.loading = true
-                            return new Promise((resolve) => {
-                                call({
-                                    method: "get",
-                                    url: 'workspaces/delete',
-                                    data: {
-                                        name: item.name
-                                    }
-                                }).then(({msg}) => {
-                                    message.success(msg)
-                                    items.value = items.value.filter(i => i.name !== item.name)
-                                }).catch(({msg}) => {
-                                    message.error(msg)
-                                    onLoad(false)
-                                }).finally(resolve)
-                            })
-                        }
-                    })
-                }
-            },
-            addIcon() {
-                return h(AddOutline);
-            },
-            createDone() {
-                createModal.value = false
-                onLoad(true)
-            },
-            domainSave() {
-                onLoad(true)
-            },
+            operationLabel,
+            operationShow,
+            operationSelect,
+            addIcon,
+            createDone,
+            domainSave,
+            stateLoading,
+            stateText,
+            onState,
             onLoad
         };
-    },
-    methods: {
-        state(item) {
-            if (item.create === 'Success') {
-                return item.state || 'Unknown'
-            } else {
-                return item.create || 'Error'
-            }
-        }
     }
 })
 </script>
@@ -409,6 +430,17 @@ export default defineComponent({
 
                 .state {
                     width: 20%;
+                    display: flex;
+                    align-items: center;
+                    .load {
+                        flex-shrink: 0;
+                        width: 18px;
+                        height: 18px;
+                        margin-right: 5px;
+                    }
+                    .text {
+                        flex: 1;
+                    }
                 }
 
                 .menu {

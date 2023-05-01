@@ -143,8 +143,8 @@ mkdir -p {{.RUN_PATH}}/.codepass/workspaces/$NAME/workspace
 CREATE "Launching"
 start="multipass launch focal --name $NAME"
 start="$start --cloud-init {{.RUN_PATH}}/.codepass/workspaces/config.yaml"
-start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/$NAME/config:/config"
-start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/$NAME/workspace:/workspace"
+start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/$NAME/config:~/.config"
+start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/$NAME/workspace:~/workspace"
 [ -n "$CPUS" ] && start="$start --cpus $CPUS"
 [ -n "$DISK" ] && start="$start --disk $DISK"
 [ -n "$MEMORY" ] && start="$start --memory $MEMORY"
@@ -158,7 +158,6 @@ multipass exec $NAME -- sh -c 'curl -fsSL https://code-server.dev/install.sh | s
 CREATE "Configuring"
 multipass exec $NAME -- sh <<-EOE
 mkdir -p ~/.config/code-server
-mkdir -p ~/wwwroot
 cat > ~/.config/code-server/config.yaml <<-EOF
 bind-addr: 0.0.0.0:55123
 auth: password
@@ -179,6 +178,7 @@ EOE
 # 启动 code-server
 CREATE "Starting"
 multipass exec $NAME -- sudo sh <<-EOE
+sudo ln -s ~/workspace /workspace
 systemctl set-environment PROXY_DOMAIN=$PROXY_DOMAIN
 systemctl set-environment VSCODE_PROXY_URI=$PROXY_URI
 systemctl set-environment DEFAULT_WORKSPACE=/workspace
@@ -206,6 +206,20 @@ CREATE "Success"
 rm -f $CmdPath
 `)
 
+// NginxUpsteamLua nginx lua配置
+const NginxUpsteamLua = string(`
+local ip = ngx.arg[1];
+local host = ngx.var.host;
+local pattern = "(%d+)-"
+local port = string.match(host, pattern)
+
+if port then
+    return string.format("%s:%s", ip, port)
+else
+    return string.format("%s:55123", ip)
+end
+`)
+
 // NginxDefaultConf nginx 默认配置
 const NginxDefaultConf = string(`
 map $http_upgrade $connection_upgrade {
@@ -224,20 +238,6 @@ map $http_x_forwarded_host $the_host {
 	default $http_x_forwarded_host;
 	"" $this_host;
 }
-`)
-
-// NginxUpsteamLua nginx lua配置
-const NginxUpsteamLua = string(`
-local ip = ngx.arg[1];
-local host = ngx.var.host;
-local pattern = "(%d+)-"
-local port = string.match(host, pattern)
-
-if port then
-    return string.format("%s:%s", ip, port)
-else
-    return string.format("%s:55123", ip)
-end
 `)
 
 // NginxDomainConf nginx 域名配置
