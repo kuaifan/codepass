@@ -3,6 +3,7 @@ package app
 import (
 	utils "codepass/util"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -109,12 +110,22 @@ func instanceDomain(name string) (string, string) {
 
 // 更新工作区域名
 func updateDomain() error {
+	domainFile := utils.RunDir("/.codepass/nginx/cert/domain")
+	domainAddr := ""
+	if utils.IsFile(domainFile) {
+		domainAddr = strings.TrimSpace(utils.ReadFile(domainFile))
+	}
+	if domainAddr == "" {
+		return errors.New("no domain")
+	}
 	err := utils.WriteFile(utils.RunDir("/.codepass/nginx/lua/upsteam.lua"), utils.TemplateContent(utils.NginxUpsteamLua, map[string]any{}))
 	if err != nil {
 		return err
 	}
 	var list []string
-	list = append(list, utils.TemplateContent(utils.NginxDefaultConf, map[string]any{}))
+	list = append(list, utils.TemplateContent(utils.NginxDefaultConf, map[string]any{
+		"DOMAIN": domainAddr,
+	}))
 	for _, entry := range workspacesList() {
 		if entry.Ip != "" && entry.Domain != "" {
 			list = append(list, utils.TemplateContent(utils.NginxDomainConf, map[string]any{

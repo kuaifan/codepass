@@ -222,6 +222,8 @@ end
 
 // NginxDefaultConf nginx 默认配置
 const NginxDefaultConf = string(`
+# {{.DOMAIN}}
+
 map $http_upgrade $connection_upgrade {
 	default upgrade;
 	'' close;
@@ -237,6 +239,44 @@ map $http_x_forwarded_proto $the_scheme {
 map $http_x_forwarded_host $the_host {
 	default $http_x_forwarded_host;
 	"" $this_host;
+}
+
+server {
+	listen 80;
+	listen 443 ssl http2;
+	server_name {{.DOMAIN}};
+	index index.html index.htm;
+    root /web/dist;
+
+	if ($server_port !~ 443){
+		rewrite ^(/.*)$ https://$host$1 permanent;
+	}
+
+	ssl_certificate /etc/nginx/cert/crt;
+	ssl_certificate_key /etc/nginx/cert/key;
+	
+	ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
+	ssl_ciphers EECDH+CHACHA20:EECDH+CHACHA20-draft:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
+	ssl_prefer_server_ciphers on;
+	ssl_session_cache shared:SSL:10m;
+	ssl_session_timeout 10m;
+
+	location /api {
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Real-PORT $remote_port;
+        proxy_set_header X-Forwarded-Host $the_host;
+        proxy_set_header X-Forwarded-Proto $the_scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_set_header Scheme $scheme;
+        proxy_set_header Server-Protocol $server_protocol;
+        proxy_set_header Server-Name $server_name;
+        proxy_set_header Server-Addr $server_addr;
+        proxy_set_header Server-Port $server_port;
+        proxy_pass http://127.0.0.1:8080;
+    }
 }
 `)
 
@@ -301,6 +341,7 @@ services:
       - {{.RUN_PATH}}/.codepass/nginx/cert:/etc/nginx/cert
       - {{.RUN_PATH}}/.codepass/nginx/lua:/etc/nginx/lua
       - {{.RUN_PATH}}/.codepass/nginx/conf.d:/etc/nginx/conf.d
+      - {{.RUN_PATH}}/web/dist:/web/dist
     restart: unless-stopped
 `)
 
