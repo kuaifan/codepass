@@ -37,6 +37,9 @@ export default defineConfig({
             resolvers: [NaiveUiResolver()]
         })
     ],
+    build: {
+        chunkSizeWarningLimit: 3000,
+    },
     css: {
         postcss: {
             plugins: [

@@ -133,6 +133,7 @@ auth: password
 password: {{.PASS}}
 cert: false
 EOF
+sudo ln -s \${HOME}/workspace /workspace
 EOE
 
 # 优化 code-server 页面资源
@@ -147,7 +148,6 @@ EOE
 # 启动 code-server
 CREATE "Starting"
 multipass exec {{.NAME}} -- sudo sh <<-EOE
-sudo ln -s ~/workspace /workspace
 systemctl set-environment PROXY_DOMAIN={{.PROXY_DOMAIN}}
 systemctl set-environment VSCODE_PROXY_URI={{.PROXY_URI}}
 systemctl set-environment DEFAULT_WORKSPACE=/workspace

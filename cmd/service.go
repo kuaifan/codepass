@@ -81,10 +81,10 @@ var serviceCmd = &cobra.Command{
 					}
 				}
 			} else {
-				if strings.HasPrefix(urlPath, "/api/workspaces/create") {
-					app.ServiceConf.WorkspacesCreate(c)
-				} else if strings.HasPrefix(urlPath, "/api/workspaces/create/log") {
+				if strings.HasPrefix(urlPath, "/api/workspaces/create/log") {
 					app.ServiceConf.WorkspacesCreateLog(c)
+				} else if strings.HasPrefix(urlPath, "/api/workspaces/create") {
+					app.ServiceConf.WorkspacesCreate(c)
 				} else if strings.HasPrefix(urlPath, "/api/workspaces/list") {
 					app.ServiceConf.WorkspacesList(c)
 				} else if strings.HasPrefix(urlPath, "/api/workspaces/info") {
