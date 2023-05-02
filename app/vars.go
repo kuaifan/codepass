@@ -64,6 +64,7 @@ type githubUserModel struct {
 	Email       string    `json:"email"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+	SaveAt      time.Time `json:"save_at"`
 }
 
 var (
@@ -178,7 +179,18 @@ func githubGetUserInfo(accessToken string) (*githubUserModel, error) {
 		return nil, err
 	}
 	userInfo.AccessToken = accessToken
+	userInfo.SaveAt = time.Now()
 	return userInfo, nil
+}
+
+// 去除关键信息
+func removeCriticalInformation(str string) string {
+	if str == "" {
+		return ""
+	}
+	str = strings.Replace(str, clientId, "********", -1)
+	str = strings.Replace(str, clientSecret, "********", -1)
+	return str
 }
 
 // UpdateProxy 更新代理地址
