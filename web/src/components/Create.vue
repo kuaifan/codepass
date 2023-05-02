@@ -10,21 +10,21 @@
         <n-form-item path="name" label="名称">
             <n-input v-model:value="formData.name" placeholder="请输入工作区名称"/>
         </n-form-item>
-        <n-form-item path="cpus" label="CPU">
+        <n-form-item v-show="advanced" path="cpus" label="CPU">
             <n-input v-model:value="formData.cpus" placeholder="请输入CPU核数">
                 <template #suffix>
                     核
                 </template>
             </n-input>
         </n-form-item>
-        <n-form-item path="memory" label="内存">
+        <n-form-item v-show="advanced" path="memory" label="内存">
             <n-input v-model:value="formData.memory" placeholder="请输入内存大小">
                 <template #suffix>
                     GB
                 </template>
             </n-input>
         </n-form-item>
-        <n-form-item path="disk" label="磁盘" placeholder="请输入磁盘大小">
+        <n-form-item v-show="advanced" path="disk" label="磁盘" placeholder="请输入磁盘大小">
             <n-input v-model:value="formData.disk">
                 <template #suffix>
                     GB
@@ -33,7 +33,10 @@
         </n-form-item>
         <n-row :gutter="[0, 24]">
             <n-col :span="24">
-                <div style="display:flex; justify-content:flex-end">
+                <div class="button-group">
+                    <n-button round quaternary type="default" @click="advanced=!advanced">
+                        高级
+                    </n-button>
                     <n-button round type="primary" @click="handleSubmit">
                         创建
                     </n-button>
@@ -66,6 +69,7 @@ export default defineComponent({
     },
     setup(props, {emit}) {
         const message = useMessage()
+        const advanced = ref<boolean>(false)
         const loadIng = ref<boolean>(false)
         const formRef = ref<FormInst | null>(null)
         const formData = ref<ModelType>({
@@ -130,6 +134,7 @@ export default defineComponent({
             ],
         }
         return {
+            advanced,
             loadIng,
             formRef,
             formData,
