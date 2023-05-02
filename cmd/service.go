@@ -48,12 +48,15 @@ var serviceCmd = &cobra.Command{
 		router := gin.Default()
 		//
 		router.Any("/*path", func(c *gin.Context) {
-			domain := c.Request.Host
+			if app.ServiceConf.OAuthGithub(c) {
+				return
+			}
 			urlPath := c.Request.URL.Path
+			urlHost := c.Request.Host
 			regFormat := fmt.Sprintf("^((\\d+)-)*([a-zA-Z][a-zA-Z0-9_]*)-code.%s", app.ServiceConf.Host)
-			if utils.Test(domain, regFormat) {
+			if utils.Test(urlHost, regFormat) {
 				reg := regexp.MustCompile(regFormat)
-				match := reg.FindStringSubmatch(domain)
+				match := reg.FindStringSubmatch(urlHost)
 				port := match[2]
 				name := match[3]
 				lose := true

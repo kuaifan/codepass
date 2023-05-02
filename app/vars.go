@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/viper"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 type ServiceModel struct {
@@ -47,6 +49,26 @@ type instanceModel struct {
 
 	Domain string `json:"domain"`
 	Url    string `json:"url"`
+}
+
+type githubTokenModel struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	Scope       string `json:"scope"`
+}
+
+type githubUserModel struct {
+	AccessToken string    `json:"access_token"`
+	ID          int       `json:"id"`
+	AvatarURL   string    `json:"avatar_url"`
+	Type        string    `json:"type"`
+	Name        string    `json:"name"`
+	Company     string    `json:"company"`
+	Blog        string    `json:"blog"`
+	Location    string    `json:"location"`
+	Email       string    `json:"email"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 var (
@@ -118,6 +140,50 @@ func instanceDomain(name string) (string, string) {
 	} else {
 		return domainAddr, fmt.Sprintf("https://%s:%s", domainAddr, ServiceConf.Port)
 	}
+}
+
+// 获取 GitHub token
+func githubGetToken(cid, sid, code string) (*githubTokenModel, error) {
+	var url = fmt.Sprintf("https://github.com/login/oauth/access_token?client_id=%s&client_secret=%s&code=%s", cid, sid, code)
+	var req *http.Request
+	var err error
+	if req, err = http.NewRequest(http.MethodGet, url, nil); err != nil {
+		return nil, err
+	}
+	req.Header.Set("accept", "application/json")
+	var httpClient = http.Client{}
+	var res *http.Response
+	if res, err = httpClient.Do(req); err != nil {
+		return nil, err
+	}
+	token := &githubTokenModel{}
+	if err = json.NewDecoder(res.Body).Decode(&token); err != nil {
+		return nil, err
+	}
+	return token, nil
+}
+
+// 获取 GitHub UserInfo
+func githubGetUserInfo(accessToken string) (*githubUserModel, error) {
+	var userInfoUrl = "https://api.github.com/user"
+	var req *http.Request
+	var err error
+	if req, err = http.NewRequest(http.MethodGet, userInfoUrl, nil); err != nil {
+		return nil, err
+	}
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", accessToken))
+	var client = http.Client{}
+	var res *http.Response
+	if res, err = client.Do(req); err != nil {
+		return nil, err
+	}
+	userInfo := &githubUserModel{}
+	if err = json.NewDecoder(res.Body).Decode(&userInfo); err != nil {
+		return nil, err
+	}
+	userInfo.AccessToken = accessToken
+	return userInfo, nil
 }
 
 // UpdateProxy 更新代理地址
