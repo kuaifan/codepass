@@ -23,11 +23,6 @@ type ProxyModel struct {
 	Ip   string
 }
 
-type keyModel struct {
-	Title string `json:"title"`
-	Key   string `json:"key"`
-}
-
 type infoModel struct {
 	Errors any            `json:"errors"`
 	Info   map[string]any `json:"info"`

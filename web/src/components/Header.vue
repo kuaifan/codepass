@@ -22,17 +22,6 @@
                 </n-dropdown>
             </div>
         </div>
-        <n-modal v-model:show="keyShow" :auto-focus="false">
-            <n-card
-                    style="width:600px;max-width:90%"
-                    title="SSH密钥"
-                    :bordered="false"
-                    size="huge"
-                    closable
-                    @close="keyShow=false">
-                <Key @keySave="keyShow=false"/>
-            </n-card>
-        </n-modal>
     </n-layout-header>
 </template>
 
@@ -72,12 +61,10 @@ import {defineComponent, computed, h, ref, VNodeChild} from "vue";
 import {useMessage} from 'naive-ui'
 import {EllipsisVertical} from "@vicons/ionicons5";
 import {useThemeName} from '../store'
-import Key from "./Key.vue";
 
 export default defineComponent({
-    components: {Key, EllipsisVertical},
+    components: {EllipsisVertical},
     setup() {
-        const keyShow = ref(false)
         const message = useMessage()
         const themeLabelMap = computed(() => ({
             dark: "浅色",
@@ -92,9 +79,6 @@ export default defineComponent({
             }
         }
         const userMenuOptions = ref([{
-            label: 'SSH密钥',
-            key: 'key',
-        }, {
             label: '退出登录',
             key: "logout",
         }])
@@ -113,14 +97,11 @@ export default defineComponent({
             return option.label as VNodeChild
         }
         const handleMenuSelect = (key: string) => {
-            if (key === 'key') {
-                keyShow.value = true
-            } else if (key === 'logout') {
+            if (key === 'logout') {
                 message.warning('没有实现')
             }
         }
         return {
-            keyShow,
             // theme
             themeName,
             themeLabelMap,
