@@ -91,6 +91,10 @@ var serviceCmd = &cobra.Command{
 					app.ServiceConf.WorkspacesInfo(c)
 				} else if strings.HasPrefix(urlPath, "/api/workspaces/delete") {
 					app.ServiceConf.WorkspacesDelete(c)
+				} else if strings.HasPrefix(urlPath, "/api/keys/info") {
+					app.ServiceConf.KeysInfo(c)
+				} else if strings.HasPrefix(urlPath, "/api/keys/save") {
+					app.ServiceConf.KeysSave(c)
 				} else if strings.HasPrefix(urlPath, "/assets") {
 					c.File(fmt.Sprintf("./web/dist%s", urlPath))
 				} else {
