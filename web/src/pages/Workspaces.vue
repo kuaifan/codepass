@@ -258,7 +258,8 @@ export default defineComponent({
             onLoad(true)
         }
         const stateLoading = (item) => {
-            return item.create !== 'Success' && item.state !== 'Failed'
+            return ['Success', ''].indexOf(item.create) !== -1
+                && ['Failed', ''].indexOf(item.state) !== -1
         }
         const stateText = (item) => {
             if (item.create === 'Success') {

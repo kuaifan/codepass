@@ -4,6 +4,7 @@ import (
 	utils "codepass/util"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/ssh"
 	"net/http"
 )
 
@@ -48,6 +49,20 @@ func (model *ServiceModel) KeysSave(c *gin.Context) {
 			"msg": "KEY不能为空",
 		})
 		return
+	}
+	_, comment, _, _, err := ssh.ParseAuthorizedKey([]byte(key))
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"ret": 0,
+			"msg": "KEY解析失败",
+			"data": gin.H{
+				"err": err.Error(),
+			},
+		})
+		return
+	}
+	if title == "" {
+		title = comment
 	}
 	// 保存KEY
 	data := keyModel{
