@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/unrolled/secure"
 	"html/template"
 	"io"
@@ -36,12 +37,48 @@ var serviceCmd = &cobra.Command{
 			utils.PrintError("无法写入文件")
 			os.Exit(1)
 		}
-		if !utils.IsFile(app.ServiceConf.Key) {
-			utils.PrintError("SSL私钥路径错误")
+		if app.ServiceConf.Conf == "" {
+			yamls := [...]string{
+				"/custom.yaml",
+				"/custom.yml",
+				"/config.yaml",
+				"/config.yml",
+			}
+			for _, yaml := range yamls {
+				if utils.IsFile(utils.RunDir(yaml)) {
+					app.ServiceConf.Conf = utils.RunDir(yaml)
+					break
+				}
+			}
+		}
+		if !utils.IsFile(app.ServiceConf.Conf) {
+			utils.PrintError("配置文件不存在")
 			os.Exit(1)
 		}
-		if !utils.IsFile(app.ServiceConf.Crt) {
-			utils.PrintError("SSL证书路径错误")
+		viper.SetConfigFile(app.ServiceConf.Conf)
+		_ = viper.ReadInConfig()
+		app.ServiceConf.Host = viper.GetString("host")
+		app.ServiceConf.Port = viper.GetString("port")
+		app.ServiceConf.SslKey = viper.GetString("ssl_key")
+		app.ServiceConf.SslCrt = viper.GetString("ssl_crt")
+		app.ServiceConf.GithubClientId = viper.GetString("github_client_id")
+		app.ServiceConf.GithubClientSecret = viper.GetString("github_client_secret")
+		if app.ServiceConf.Host == "" {
+			app.ServiceConf.Host = "0.0.0.0"
+		}
+		if app.ServiceConf.Port == "" {
+			app.ServiceConf.Host = "8443"
+		}
+		if !utils.IsFile(app.ServiceConf.SslKey) {
+			utils.PrintError("SSL 私钥配置错误")
+			os.Exit(1)
+		}
+		if !utils.IsFile(app.ServiceConf.SslCrt) {
+			utils.PrintError("SSL 证书配置错误")
+			os.Exit(1)
+		}
+		if app.ServiceConf.GithubClientId == "" || app.ServiceConf.GithubClientSecret == "" {
+			utils.PrintError("GitHub 配置必须填写")
 			os.Exit(1)
 		}
 		app.UpdateProxy()
@@ -95,7 +132,7 @@ var serviceCmd = &cobra.Command{
 		})
 		//
 		router.Use(tlsHandler())
-		err = router.RunTLS(fmt.Sprintf(":%s", app.ServiceConf.Port), app.ServiceConf.Crt, app.ServiceConf.Key)
+		err = router.RunTLS(fmt.Sprintf(":%s", app.ServiceConf.Port), app.ServiceConf.SslCrt, app.ServiceConf.SslKey)
 		if err != nil {
 			utils.PrintError(err.Error())
 		}
@@ -137,8 +174,5 @@ func tlsHandler() gin.HandlerFunc {
 
 func init() {
 	rootCmd.AddCommand(serviceCmd)
-	serviceCmd.Flags().StringVar(&app.ServiceConf.Host, "host", "0.0.0.0", "主机地址或IP")
-	serviceCmd.Flags().StringVar(&app.ServiceConf.Port, "port", "443", "服务端口")
-	serviceCmd.Flags().StringVar(&app.ServiceConf.Key, "key", "", "SSL私钥路径(KEY)")
-	serviceCmd.Flags().StringVar(&app.ServiceConf.Crt, "crt", "", "SSL证书路径(PEM格式)")
+	serviceCmd.Flags().StringVar(&app.ServiceConf.Conf, "conf", "", "配置文件路径")
 }

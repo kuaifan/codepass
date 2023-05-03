@@ -12,10 +12,13 @@ import (
 )
 
 type ServiceModel struct {
-	Host string
-	Port string
-	Crt  string
-	Key  string
+	Conf               string
+	Host               string
+	Port               string
+	SslCrt             string
+	SslKey             string
+	GithubClientId     string
+	GithubClientSecret string
 }
 
 type ProxyModel struct {
@@ -188,8 +191,8 @@ func removeCriticalInformation(str string) string {
 	if str == "" {
 		return ""
 	}
-	str = strings.Replace(str, clientId, "********", -1)
-	str = strings.Replace(str, clientSecret, "********", -1)
+	str = strings.Replace(str, ServiceConf.GithubClientId, "********", -1)
+	str = strings.Replace(str, ServiceConf.GithubClientSecret, "********", -1)
 	return str
 }
 

@@ -11,11 +11,6 @@ import (
 	"strings"
 )
 
-var (
-	clientId     = "cbd2d3097323fbbdafaa"
-	clientSecret = "ca27bc159978a87c7570a15ea760e39663af4fb8"
-)
-
 // OAuth 授权
 func (model *ServiceModel) OAuth(c *gin.Context) {
 	urlPath := c.Request.URL.Path
@@ -40,7 +35,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 	// 授权回应
 	if strings.HasPrefix(urlPath, "/oauth/redirect") {
 		code := c.Query("code")
-		githubToken, err := githubGetToken(clientId, clientSecret, code)
+		githubToken, err := githubGetToken(ServiceConf.GithubClientId, ServiceConf.GithubClientSecret, code)
 		if err != nil {
 			utils.GinResult(c, http.StatusOK, fmt.Sprintf("授权失败：%s", removeCriticalInformation(err.Error())))
 			return
@@ -89,7 +84,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 		items = append(items, gin.H{
 			"type":  "github",
 			"label": "使用GitHub登录",
-			"href":  fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s", clientId, redirectUri),
+			"href":  fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s", ServiceConf.GithubClientId, redirectUri),
 		})
 		content, _ := json.Marshal(&items)
 		utils.GinResult(c, http.StatusUnauthorized, string(content))

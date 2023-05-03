@@ -22,7 +22,7 @@ install: build
 	./codepass install
 
 service: build
-	./codepass service --host=eeui.app --port=3443 --key=/Users/GAOYI/Downloads/eeui-app-nginx/app_key.key --crt=/Users/GAOYI/Downloads/eeui-app-nginx/app_chain.crt
+	./codepass service
 
 assets:
 	go-assets-builder web/dist -o cmd/assets.go -p cmd
