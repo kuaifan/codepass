@@ -109,7 +109,7 @@ export default defineComponent({
         }
         const handleMenuSelect = (key: string) => {
             if (key === 'logout') {
-                Cookies.remove('api_token')
+                Cookies.remove('result_token')
                 window.location.href = "/oauth/logout"
             } else {
                 message.warning('未知操作')

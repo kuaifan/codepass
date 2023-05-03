@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -25,14 +26,14 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 	}
 	// 退出登录
 	if strings.HasPrefix(urlPath, "/oauth/logout") {
-		apiToken, _ := c.Cookie("api_token")
-		if apiToken != "" {
-			apiFile := utils.RunDir(fmt.Sprintf("/.codepass/users/%s", apiToken))
+		userToken, _ := c.Cookie("result_token")
+		if userToken != "" {
+			apiFile := utils.RunDir(fmt.Sprintf("/.codepass/users/%s", userToken))
 			if utils.IsFile(apiFile) {
 				_ = os.Remove(apiFile)
 			}
 		}
-		c.SetCookie("api_token", "", -1, "/", c.Request.Host, false, false)
+		c.SetCookie("result_token", "", -1, "/", c.Request.Host, false, false)
 		utils.GinResult(c, http.StatusOK, "退出成功")
 		return
 	}
@@ -53,41 +54,42 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 			utils.GinResult(c, http.StatusOK, fmt.Sprintf("获取用户信息失败：%s", removeCriticalInformation(err.Error())))
 			return
 		}
-		apiToken := utils.GenerateString(32)
+		userToken := utils.GenerateString(32)
 		userData, err := json.Marshal(&userInfo)
 		if err != nil {
 			utils.GinResult(c, http.StatusOK, fmt.Sprintf("解析用户信息失败：%s", removeCriticalInformation(err.Error())))
 			return
 		}
-		err = utils.WriteFile(utils.RunDir(fmt.Sprintf("/.codepass/users/%s", apiToken)), string(userData))
+		err = utils.WriteFile(utils.RunDir(fmt.Sprintf("/.codepass/users/%s", userToken)), string(userData))
 		if err != nil {
 			utils.GinResult(c, http.StatusOK, fmt.Sprintf("AccessToken 保存失败：%s", removeCriticalInformation(err.Error())))
 			return
 		}
-		c.SetCookie("api_token", apiToken, 0, "/", c.Request.Host, false, false)
+		c.SetCookie("result_token", userToken, 0, "/", c.Request.Host, false, false)
 		utils.GinResult(c, http.StatusMovedPermanently, "/")
 		return
 	}
 	// 读取身份
 	apiFile := ""
 	userInfo := &githubUserModel{}
-	apiToken, _ := c.Cookie("api_token")
-	if apiToken != "" {
-		apiFile = utils.RunDir(fmt.Sprintf("/.codepass/users/%s", apiToken))
+	userToken, _ := c.Cookie("result_token")
+	if userToken != "" {
+		apiFile = utils.RunDir(fmt.Sprintf("/.codepass/users/%s", userToken))
 		userData := utils.ReadFile(apiFile)
 		_ = json.Unmarshal([]byte(userData), userInfo)
 		if userInfo.ID == 0 {
-			apiToken = ""
+			userToken = ""
 		}
 	}
 	// 发起授权
-	if apiToken == "" {
+	if userToken == "" {
 		_, homePage := instanceDomain("")
+		redirectUri := url.QueryEscape(fmt.Sprintf("%s/oauth/redirect", homePage))
 		var items []map[string]any
 		items = append(items, gin.H{
 			"type":  "github",
 			"label": "使用GitHub登录",
-			"href":  fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s/oauth/redirect", clientId, homePage),
+			"href":  fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s", clientId, redirectUri),
 		})
 		content, _ := json.Marshal(&items)
 		utils.GinResult(c, http.StatusUnauthorized, string(content))
