@@ -1,5 +1,5 @@
 <template>
-    <div class="create-log">
+    <div class="log">
         <n-log ref="nRef" :log="content" trim/>
         <div class="footer">
             <n-button :loading="loading" @click="getData">刷新</n-button>
@@ -8,7 +8,7 @@
 </template>
 
 <style lang="less" scoped>
-.create-log {
+.log {
     .footer {
         display: flex;
         align-items: center;
@@ -43,8 +43,9 @@ export default defineComponent({
             loading.value = true
             call({
                 method: "get",
-                url: 'workspaces/create/log',
+                url: 'workspaces/log',
                 data: {
+                    type: 'create',
                     name: props.name
                 }
             }).then(({data}) => {

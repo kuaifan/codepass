@@ -30,8 +30,11 @@ import utils from '../utils.js'
 
 export default defineComponent({
     setup() {
-        const resultCode = Cookies.get('result_code')
-        const resultMsg = `${Cookies.get('result_msg') || ''}`
+        let resultCode = Cookies.get('result_code')
+        let resultMsg = `${Cookies.get('result_msg') || ''}`
+        if (utils.parseInt(resultCode) === 400) {
+            resultCode = "warning"
+        }
 
         const status = ref<"500" | "error" | "info" | "success" | "warning" | "404" | "403" | "418">(utils.inArray(resultCode, ["500", "error", "info", "success", "warning", "404", "403", "418"]) ? resultCode : "info")
         const title = ref(resultMsg.length <= 10 ? resultMsg : '')

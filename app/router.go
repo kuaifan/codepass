@@ -96,13 +96,18 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 		utils.GinResult(c, http.StatusOK, "获取成功", userInfo)
 		return
 	}
-	// 工作区接口
-	if strings.HasPrefix(urlPath, "/api/workspaces/create/log") {
-		ServiceConf.WorkspacesCreateLog(c)
+	// 用户存储库
+	if strings.HasPrefix(urlPath, "/api/user/repos") {
+		ServiceConf.UserRepositories(c, userInfo)
 		return
 	}
+	// 工作区接口
 	if strings.HasPrefix(urlPath, "/api/workspaces/create") {
 		ServiceConf.WorkspacesCreate(c)
+		return
+	}
+	if strings.HasPrefix(urlPath, "/api/workspaces/log") {
+		ServiceConf.WorkspacesLog(c)
 		return
 	}
 	if strings.HasPrefix(urlPath, "/api/workspaces/list") {

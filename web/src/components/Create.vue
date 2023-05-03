@@ -7,8 +7,15 @@
             label-placement="left"
             label-width="auto"
             require-mark-placement="right-hanging">
-        <n-form-item path="name" label="名称">
-            <n-input v-model:value="formData.name" placeholder="请输入工作区名称"/>
+        <n-form-item path="repos" label="储存库">
+            <n-select
+                    v-model:value="formData.repos"
+                    :options="reposComputed"
+                    :show-arrow="false"
+                    :on-blur="reposBlur"
+                    filterable
+                    tag
+                    placeholder="请输入或选择储存库地址"/>
         </n-form-item>
         <n-form-item v-show="advanced" path="cpus" label="CPU">
             <n-input v-model:value="formData.cpus" placeholder="请输入CPU核数">
@@ -47,7 +54,7 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, ref} from 'vue'
+import {computed, defineComponent, ref} from 'vue'
 import {
     FormInst,
     FormItemRule,
@@ -57,7 +64,7 @@ import call from "../call.js";
 import utils from "../utils.js";
 
 interface ModelType {
-    name: string | null
+    repos: string | null
     cpus: string | null
     memory: string | null
     disk: string | null
@@ -73,17 +80,39 @@ export default defineComponent({
         const loadIng = ref<boolean>(false)
         const formRef = ref<FormInst | null>(null)
         const formData = ref<ModelType>({
-            name: null,
+            repos: null,
             cpus: "2",
             memory: "2",
             disk: "20",
         })
 
+        const reposRef = ref(null)
+        utils.IDBArray("userRepos").then((data) => {
+            reposRef.value = data
+            call({
+                method: "get",
+                url: 'user/repos',
+            }).then(({data}) => {
+                utils.IDBSave("userRepos", reposRef.value = data.list)
+            })
+        })
+        const reposComputed = computed(() => {
+            if (reposRef.value == null) {
+                return []
+            }
+            return reposRef.value.map(item => {
+                return {
+                    label: item['html_url'],
+                    value: item['html_url']
+                }
+            })
+        })
+
         const formRules: FormRules = {
-            name: [
+            repos: [
                 {
                     required: true,
-                    message: '请输入名称',
+                    message: '请选择储存库地址',
                     trigger: ['input', 'blur']
                 }
             ],
@@ -133,40 +162,53 @@ export default defineComponent({
                 }
             ],
         }
+
+        const reposBlur = (e) => {
+            const value = `${e.target.value}`.trim()
+            if (/^https*:\/\//.test(value) && !repos.value.find(item => item['html_url'] === value)) {
+                repos.value.unshift({
+                    html_url: value
+                })
+                formData.value.repos = value
+            }
+        }
+        const handleSubmit = (e: MouseEvent) => {
+            e.preventDefault()
+            formRef.value?.validate((errors) => {
+                if (errors) {
+                    return;
+                }
+                //
+                if (loadIng.value) {
+                    return
+                }
+                loadIng.value = true
+                const data = utils.cloneJSON(formData.value)
+                data.disk = data.disk + "GB"
+                data.memory = data.memory + "GB"
+                call({
+                    method: "get",
+                    url: 'workspaces/create',
+                    data
+                }).then(({msg}) => {
+                    message.success(msg);
+                    emit('createDone')
+                }).catch(({msg}) => {
+                    message.error(msg);
+                }).finally(() => {
+                    loadIng.value = false
+                })
+            })
+        }
         return {
             advanced,
             loadIng,
             formRef,
             formData,
             formRules,
-            handleSubmit(e: MouseEvent) {
-                e.preventDefault()
-                formRef.value?.validate((errors) => {
-                    if (errors) {
-                        return;
-                    }
-                    //
-                    if (loadIng.value) {
-                        return
-                    }
-                    loadIng.value = true
-                    const data = utils.cloneJSON(formData.value)
-                    data.disk = data.disk + "GB"
-                    data.memory = data.memory + "GB"
-                    call({
-                        method: "get",
-                        url: 'workspaces/create',
-                        data
-                    }).then(({msg}) => {
-                        message.success(msg);
-                        emit('createDone')
-                    }).catch(({msg}) => {
-                        message.error(msg);
-                    }).finally(() => {
-                        loadIng.value = false
-                    })
-                })
-            }
+            reposComputed,
+            reposBlur,
+            handleSubmit
         }
     }
 })

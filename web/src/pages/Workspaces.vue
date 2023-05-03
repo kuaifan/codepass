@@ -102,7 +102,7 @@
                         size="huge"
                         closable
                         @close="logModal=false">
-                    <CreateLog :name="logName"/>
+                    <Log :name="logName"/>
                 </n-card>
             </n-modal>
         </div>
@@ -115,7 +115,7 @@ import Header from "../components/Header.vue";
 import Banner from "../components/Banner.vue";
 import Create from "../components/Create.vue";
 import Loading from "../components/Loading.vue";
-import CreateLog from "../components/CreateLog.vue";
+import Log from "../components/Log.vue";
 import Info from "../components/Info.vue";
 import {AddOutline, EllipsisVertical, Reload, SearchOutline} from "@vicons/ionicons5";
 import {useMessage, useDialog, NButton} from "naive-ui";
@@ -124,7 +124,7 @@ import call from "../call.js";
 export default defineComponent({
     components: {
         Info,
-        CreateLog,
+        Log,
         EllipsisVertical,
         Reload, Loading, Create,
         Banner,
@@ -359,7 +359,7 @@ export default defineComponent({
             align-items: center;
 
             .reload {
-                margin-left: 16px;
+                margin: 0 32px 0 16px;
                 width: 30px;
                 height: 30px;
                 display: flex;

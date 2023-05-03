@@ -90,8 +90,9 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	})
 }
 
-// WorkspacesCreateLog 查看创建日志
-func (model *ServiceModel) WorkspacesCreateLog(c *gin.Context) {
+// WorkspacesLog 查看创建日志
+func (model *ServiceModel) WorkspacesLog(c *gin.Context) {
+	type_ := c.Query("type")
 	name := c.Query("name")
 	tail, _ := strconv.Atoi(c.Query("tail"))
 	if tail <= 0 {
@@ -100,17 +101,23 @@ func (model *ServiceModel) WorkspacesCreateLog(c *gin.Context) {
 	if tail > 10000 {
 		tail = 10000
 	}
-	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.log", name))
-	createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
-	if !utils.IsFile(logFile) {
-		utils.GinResult(c, http.StatusBadRequest, "日志文件不存在")
-		return
+	if type_ == "create" {
+		// 创建日志
+		logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.log", name))
+		createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
+		if !utils.IsFile(logFile) {
+			utils.GinResult(c, http.StatusBadRequest, "日志文件不存在")
+			return
+		}
+		logContent, _ := utils.Cmd("-c", fmt.Sprintf("tail -%d %s", tail, logFile))
+		utils.GinResult(c, http.StatusOK, "读取成功", gin.H{
+			"create": strings.TrimSpace(utils.ReadFile(createFile)),
+			"log":    strings.TrimSpace(logContent),
+		})
+	} else {
+		// 其他日志
+		utils.GinResult(c, http.StatusBadRequest, "暂不支持")
 	}
-	logContent, _ := utils.Cmd("-c", fmt.Sprintf("tail -%d %s", tail, logFile))
-	utils.GinResult(c, http.StatusOK, "读取成功", gin.H{
-		"create": strings.TrimSpace(utils.ReadFile(createFile)),
-		"log":    strings.TrimSpace(logContent),
-	})
 }
 
 // WorkspacesList 获取工作区列表

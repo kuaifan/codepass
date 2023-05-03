@@ -70,6 +70,22 @@ type githubUserModel struct {
 	SaveAt      time.Time `json:"save_at"`
 }
 
+type githubReposSimplify struct {
+	CreatedAt     time.Time `json:"created_at"`
+	DefaultBranch string    `json:"default_branch"`
+	Description   string    `json:"description"`
+	Disabled      bool      `json:"disabled"`
+	FullName      string    `json:"full_name"`
+	HTMLURL       string    `json:"html_url"`
+	ID            int       `json:"id"`
+	Language      string    `json:"language"`
+	Name          string    `json:"name"`
+	NodeID        string    `json:"node_id"`
+	Private       bool      `json:"private"`
+	SSHURL        string    `json:"ssh_url"`
+	Visibility    string    `json:"visibility"`
+}
+
 var (
 	ServiceConf ServiceModel
 	ProxyList   []ProxyModel
