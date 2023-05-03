@@ -90,6 +90,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 		utils.GinResult(c, http.StatusUnauthorized, string(content))
 		return
 	}
+	ServiceConf.GithubUserInfo = userInfo
 	// 身份信息
 	if strings.HasPrefix(urlPath, "/api/user/info") {
 		userInfo.AccessToken = "" // 清空防止前端泄露AccessToken
@@ -98,7 +99,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 	}
 	// 用户存储库
 	if strings.HasPrefix(urlPath, "/api/user/repos") {
-		ServiceConf.UserRepositories(c, userInfo)
+		ServiceConf.UserRepositories(c)
 		return
 	}
 	// 工作区接口

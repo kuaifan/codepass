@@ -94,7 +94,7 @@ var serviceCmd = &cobra.Command{
 		//
 		router.Any("/*path", func(c *gin.Context) {
 			urlHost := utils.GinHost(c)
-			regFormat := fmt.Sprintf("^((\\d+)-)*([a-zA-Z][a-zA-Z0-9_]*)-code.%s", app.ServiceConf.Host)
+			regFormat := fmt.Sprintf("^((\\d+)-)*([^\\/\\.]+)-([^\\/\\.]+)-([^\\/\\.]+).%s", app.ServiceConf.Host)
 			if utils.Test(urlHost, regFormat) {
 				// 工作区实例
 				reg := regexp.MustCompile(regFormat)

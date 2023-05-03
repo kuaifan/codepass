@@ -85,6 +85,11 @@ CmdPath=$0
 # {{.PROXY_DOMAIN}}
 # {{.PROXY_URI}}
 
+# {{.OWNER_NAME}}
+# {{.REPOS_OWNER}}
+# {{.REPOS_NAME}}
+# {{.CLONE_CMD}}
+
 # {{.CPUS}}
 # {{.DISK}}
 # {{.MEMORY}}
@@ -104,6 +109,7 @@ runcmd:
   - sudo apt-get install -y nodejs
   - sudo curl -sSL https://get.daocloud.io/docker | sh
   - sudo systemctl start docker
+  - {{.CLONE_CMD}}
 EOF
 mkdir -p {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config
 mkdir -p {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/workspace
@@ -132,6 +138,10 @@ bind-addr: 0.0.0.0:55123
 auth: password
 password: {{.PASS}}
 cert: false
+
+owner-name: {{.OWNER_NAME}}
+repos-owner: {{.REPOS_OWNER}}
+repos-name: {{.REPOS_NAME}}
 EOF
 sudo ln -s \${HOME}/workspace /workspace
 EOE
@@ -150,7 +160,7 @@ CREATE "Starting"
 multipass exec {{.NAME}} -- sudo sh <<-EOE
 systemctl set-environment PROXY_DOMAIN={{.PROXY_DOMAIN}}
 systemctl set-environment VSCODE_PROXY_URI={{.PROXY_URI}}
-systemctl set-environment DEFAULT_WORKSPACE=/workspace
+systemctl set-environment DEFAULT_WORKSPACE=/workspace/{{.REPOS_NAME}}
 systemctl enable --now code-server@ubuntu
 if [ 0 -eq \$? ]; then
 	echo "success" > /tmp/.code-server

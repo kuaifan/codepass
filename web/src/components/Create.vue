@@ -165,8 +165,11 @@ export default defineComponent({
 
         const reposBlur = (e) => {
             const value = `${e.target.value}`.trim()
-            if (/^https*:\/\//.test(value) && !repos.value.find(item => item['html_url'] === value)) {
-                repos.value.unshift({
+            if (reposRef.value === null) {
+                reposRef.value = []
+            }
+            if (/^https*:\/\//.test(value) && !reposRef.value.find(item => item['html_url'] === value)) {
+                reposRef.value.unshift({
                     html_url: value
                 })
                 formData.value.repos = value

@@ -16,19 +16,32 @@ import (
 func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	// 参数校验
 	var (
-		name   = c.Query("name")
+		repos  = c.Query("repos")
 		pass   = c.Query("pass")
 		cpus   = c.Query("cpus")
 		disk   = c.Query("disk")
 		memory = c.Query("memory")
 	)
-	if name == "" {
-		utils.GinResult(c, http.StatusBadRequest, "工作区名称不能为空")
+	if repos == "" {
+		utils.GinResult(c, http.StatusBadRequest, "储存库地址不能为空")
 		return
 	}
-	if !utils.Test(name, "^[a-zA-Z][a-zA-Z0-9_]*$") {
-		utils.GinResult(c, http.StatusBadRequest, "工作区名称只允许字母开头，数字、字母、下划线组成")
+	if !utils.Test(repos, "^https*://") {
+		utils.GinResult(c, http.StatusBadRequest, "储存库地址格式错误")
 		return
+	}
+	re := "^https*://github.com/([^\\/\\.]+)/([^\\/\\.]+)(\\.git)?\\/?$"
+	name := ""
+	reposOwner := ""
+	reposName := ""
+	if utils.Test(repos, re) {
+		reg := regexp.MustCompile(re)
+		match := reg.FindStringSubmatch(repos)
+		reposOwner = match[1]
+		reposName = match[2]
+		name = fmt.Sprintf("%s-%s-%s", reposOwner, reposName, utils.GenerateString(8))
+	} else {
+		utils.GinResult(c, http.StatusBadRequest, "暂不支持此储存库地址")
 	}
 	if pass == "" {
 		pass = utils.GenerateString(16)
@@ -66,6 +79,11 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		"PASS":         pass,
 		"PROXY_DOMAIN": proxyDomain,
 		"PROXY_URI":    proxyUri,
+
+		"OWNER_NAME":  ServiceConf.GithubUserInfo.Name,
+		"REPOS_OWNER": reposOwner,
+		"REPOS_NAME":  reposName,
+		"CLONE_CMD":   fmt.Sprintf("git clone https://oauth2:%s@github.com/%s/%s.git /workspace/%s", ServiceConf.GithubUserInfo.AccessToken, reposOwner, reposName, reposName),
 
 		"CPUS":   cpus,
 		"DISK":   disk,

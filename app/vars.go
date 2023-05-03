@@ -19,6 +19,7 @@ type ServiceModel struct {
 	SslKey             string
 	GithubClientId     string
 	GithubClientSecret string
+	GithubUserInfo     *githubUserModel
 }
 
 type ProxyModel struct {
@@ -148,7 +149,7 @@ func instanceBase(entry *instanceModel) *instanceModel {
 func instanceDomain(name string) (string, string) {
 	domainAddr := ServiceConf.Host
 	if name != "" {
-		domainAddr = fmt.Sprintf("%s-code.%s", name, domainAddr)
+		domainAddr = fmt.Sprintf("%s.%s", name, domainAddr)
 	}
 	if ServiceConf.Port == "443" {
 		return domainAddr, fmt.Sprintf("https://%s", domainAddr)
