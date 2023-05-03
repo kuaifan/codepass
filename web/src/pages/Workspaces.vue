@@ -171,7 +171,7 @@ export default defineComponent({
                 key: "delete",
             }
         ])
-        const operationItem = ref({url: '', pass: ''})
+        const operationItem = ref({url: '', pass: '', repos_name: ''})
 
         const operationLabel = (option) => {
             if (option.disabled === true) {
@@ -189,7 +189,7 @@ export default defineComponent({
                 )
             }
             if (option.key === 'open' && operationItem.value.url) {
-                const action = operationItem.value.url + "/login?folder=/workspace"
+                const action = operationItem.value.url + "/login?folder=/workspace/" + operationItem.value.repos_name
                 return h('form',
                     {
                         action,

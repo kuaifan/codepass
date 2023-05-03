@@ -44,7 +44,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		utils.GinResult(c, http.StatusBadRequest, "暂不支持此储存库地址")
 	}
 	if pass == "" {
-		pass = utils.GenerateString(16)
+		pass = utils.GenerateString(32)
 	}
 	if !utils.Test(pass, "^[a-zA-Z0-9_]*$") {
 		utils.GinResult(c, http.StatusBadRequest, "工作区密码只允许数字、字母、下划线组成")
@@ -83,7 +83,8 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		"OWNER_NAME":  ServiceConf.GithubUserInfo.Name,
 		"REPOS_OWNER": reposOwner,
 		"REPOS_NAME":  reposName,
-		"CLONE_CMD":   fmt.Sprintf("git clone https://oauth2:%s@github.com/%s/%s.git /workspace/%s", ServiceConf.GithubUserInfo.AccessToken, reposOwner, reposName, reposName),
+		"REPOS_URL":   repos,
+		"CLONE_CMD":   fmt.Sprintf("git clone https://oauth2:%s@github.com/%s/%s.git ~/workspace/%s", ServiceConf.GithubUserInfo.AccessToken, reposOwner, reposName, reposName),
 
 		"CPUS":   cpus,
 		"DISK":   disk,
@@ -189,9 +190,13 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/code-server/config.yaml", name)))
 	_ = viper.ReadInConfig()
 	utils.GinResult(c, http.StatusOK, "获取成功", gin.H{
-		"create": strings.TrimSpace(utils.ReadFile(createFile)),
-		"pass":   viper.GetString("password"),
-		"info":   info,
+		"create":      strings.TrimSpace(utils.ReadFile(createFile)),
+		"pass":        viper.GetString("password"),
+		"owner_name":  viper.GetString("owner-name"),
+		"repos_owner": viper.GetString("repos-owner"),
+		"repos_name":  viper.GetString("repos-name"),
+		"repos_url":   viper.GetString("repos-url"),
+		"info":        info,
 	})
 }
 

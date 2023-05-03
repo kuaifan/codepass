@@ -46,6 +46,11 @@ type instanceModel struct {
 	Create string `json:"create"`
 	Pass   string `json:"pass"`
 
+	OwnerName  string `json:"owner_name"`
+	ReposOwner string `json:"repos_owner"`
+	ReposName  string `json:"repos_name"`
+	ReposUrl   string `json:"repos_url"`
+
 	Domain string `json:"domain"`
 	Url    string `json:"url"`
 }
@@ -102,8 +107,12 @@ func workspacesList() []*instanceModel {
 	if err = json.Unmarshal([]byte(result), &data); err != nil {
 		return nil
 	}
+	var list []*instanceModel
 	for _, entry := range data.List {
 		instanceBase(entry)
+		if utils.Test(entry.Name, "^([^\\/\\.]+)-([^\\/\\.]+)-([^\\/\\.]+)$") {
+			list = append(list, entry)
+		}
 	}
 	//
 	dirEntry, err := os.ReadDir(utils.RunDir("/.codepass/workspaces"))
@@ -114,20 +123,20 @@ func workspacesList() []*instanceModel {
 		if entry.IsDir() {
 			name := entry.Name()
 			exist := false
-			for _, exists := range data.List {
+			for _, exists := range list {
 				if name == exists.Name {
 					exist = true
 					break
 				}
 			}
 			if !exist {
-				data.List = append(data.List, instanceBase(&instanceModel{
+				list = append(list, instanceBase(&instanceModel{
 					Name: name,
 				}))
 			}
 		}
 	}
-	return data.List
+	return list
 }
 
 // 获取工作区基本信息
@@ -141,6 +150,10 @@ func instanceBase(entry *instanceModel) *instanceModel {
 	}
 	entry.Create = strings.TrimSpace(utils.ReadFile(createFile))
 	entry.Pass = viper.GetString("password")
+	entry.OwnerName = viper.GetString("owner-name")
+	entry.ReposOwner = viper.GetString("repos-owner")
+	entry.ReposName = viper.GetString("repos-name")
+	entry.ReposUrl = viper.GetString("repos-url")
 	entry.Domain, entry.Url = instanceDomain(name)
 	return entry
 }

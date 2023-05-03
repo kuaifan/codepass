@@ -88,6 +88,7 @@ CmdPath=$0
 # {{.OWNER_NAME}}
 # {{.REPOS_OWNER}}
 # {{.REPOS_NAME}}
+# {{.REPOS_URL}}
 # {{.CLONE_CMD}}
 
 # {{.CPUS}}
@@ -102,7 +103,7 @@ CREATE() {
 
 # 准备工作
 CREATE "Preparing"
-cat > {{.RUN_PATH}}/.codepass/workspaces/config.yaml <<-EOF
+cat > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/init.yaml <<-EOF
 #cloud-config
 runcmd:
   - curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
@@ -117,7 +118,7 @@ mkdir -p {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/workspace
 # 启动虚拟机
 CREATE "Launching"
 start="multipass launch focal --name {{.NAME}}"
-start="$start --cloud-init {{.RUN_PATH}}/.codepass/workspaces/config.yaml"
+start="$start --cloud-init {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/init.yaml"
 start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config:~/.config"
 start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/workspace:~/workspace"
 [ -n "{{.CPUS}}" ] && start="$start --cpus {{.CPUS}}"
@@ -142,6 +143,7 @@ cert: false
 owner-name: {{.OWNER_NAME}}
 repos-owner: {{.REPOS_OWNER}}
 repos-name: {{.REPOS_NAME}}
+repos-url: {{.REPOS_URL}}
 EOF
 sudo ln -s \${HOME}/workspace /workspace
 EOE
