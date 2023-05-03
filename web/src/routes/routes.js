@@ -9,9 +9,6 @@ export const routes = [
         path: '/:pathMatch(.*)*',
         redirect: {
             name: 'workspaces',
-            params: {
-                theme: 'os-theme'
-            }
         }
     }
 ]

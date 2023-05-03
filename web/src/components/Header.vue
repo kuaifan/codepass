@@ -12,13 +12,21 @@
                         @click="handleThemeUpdate">
                     {{ themeLabelMap[themeName] }}
                 </n-button>
+                <n-button
+                        v-if="userInfo.name"
+                        size="small"
+                        quaternary
+                        class="name">
+                    {{userInfo.name}}
+                </n-button>
                 <n-dropdown
+                        v-if="userInfo.avatar_url"
                         trigger="click"
                         :show-arrow="true"
                         :options="userMenuOptions"
                         :render-label="renderDropdownLabel"
                         @select="handleMenuSelect">
-                    <n-avatar class="avatar" round>C</n-avatar>
+                    <n-avatar class="avatar" round :size="28" :src="userInfo.avatar_url"></n-avatar>
                 </n-dropdown>
             </div>
         </div>
@@ -46,7 +54,7 @@
         align-items: center;
 
         .name {
-            margin-right: 18px;
+            margin-right: 14px;
         }
 
         .avatar {
@@ -59,13 +67,16 @@
 <script lang="ts">
 import {defineComponent, computed, h, ref, VNodeChild} from "vue";
 import {useMessage} from 'naive-ui'
+import Cookies from "js-cookie";
 import {EllipsisVertical} from "@vicons/ionicons5";
-import {useThemeName} from '../store'
+import {useThemeName, useUserInfo, loadUserInfo} from '../store'
 
 export default defineComponent({
     components: {EllipsisVertical},
     setup() {
+        loadUserInfo()
         const message = useMessage()
+        const userInfo = useUserInfo()
         const themeLabelMap = computed(() => ({
             dark: "浅色",
             light: "深色"
@@ -98,10 +109,15 @@ export default defineComponent({
         }
         const handleMenuSelect = (key: string) => {
             if (key === 'logout') {
-                message.warning('没有实现')
+                Cookies.remove('api_token')
+                window.location.href = "/oauth/logout"
+            } else {
+                message.warning('未知操作')
             }
         }
         return {
+            // user
+            userInfo,
             // theme
             themeName,
             themeLabelMap,

@@ -23,34 +23,22 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		memory = c.Query("memory")
 	)
 	if name == "" {
-		c.JSON(http.StatusOK, gin.H{
-			"ret": 0,
-			"msg": "工作区名称不能为空",
-		})
+		utils.GinResult(c, http.StatusBadRequest, "工作区名称不能为空")
 		return
 	}
 	if !utils.Test(name, "^[a-zA-Z][a-zA-Z0-9_]*$") {
-		c.JSON(http.StatusOK, gin.H{
-			"ret": 0,
-			"msg": "工作区名称只允许字母开头，数字、字母、下划线组成",
-		})
+		utils.GinResult(c, http.StatusBadRequest, "工作区名称只允许字母开头，数字、字母、下划线组成")
 		return
 	}
 	if pass == "" {
 		pass = utils.GenerateString(16)
 	}
 	if !utils.Test(pass, "^[a-zA-Z0-9_]*$") {
-		c.JSON(http.StatusOK, gin.H{
-			"ret": 0,
-			"msg": "工作区密码只允许数字、字母、下划线组成",
-		})
+		utils.GinResult(c, http.StatusBadRequest, "工作区密码只允许数字、字母、下划线组成")
 		return
 	}
 	if cpus != "" && !utils.Test(cpus, "^\\d+$") {
-		c.JSON(http.StatusOK, gin.H{
-			"ret": 0,
-			"msg": "CPU只能是存数字",
-		})
+		utils.GinResult(c, http.StatusBadRequest, "CPU只能是存数字")
 		return
 	}
 	if disk != "" && utils.Test(disk, "^\\d+$") {
@@ -62,10 +50,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	// 检测工作区是否已存在
 	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
 	if utils.IsDir(dirPath) {
-		c.JSON(http.StatusOK, gin.H{
-			"ret": 0,
-			"msg": "工作区已存在",
-		})
+		utils.GinResult(c, http.StatusBadRequest, "工作区已存在")
 		return
 	}
 	// 端口代理地址
@@ -87,12 +72,8 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		"MEMORY": memory,
 	}))
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"ret": 0,
-			"msg": "创建工作区失败",
-			"data": gin.H{
-				"err": err.Error(),
-			},
+		utils.GinResult(c, http.StatusBadRequest, "创建工作区失败", gin.H{
+			"err": err.Error(),
 		})
 		return
 	}
@@ -103,13 +84,9 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		UpdateProxy()
 	}()
 	//
-	c.JSON(http.StatusOK, gin.H{
-		"ret": 1,
-		"msg": "创建工作区成功",
-		"data": gin.H{
-			"name": name,
-			"pass": pass,
-		},
+	utils.GinResult(c, http.StatusOK, "创建工作区成功", gin.H{
+		"name": name,
+		"pass": pass,
 	})
 }
 
@@ -126,20 +103,13 @@ func (model *ServiceModel) WorkspacesCreateLog(c *gin.Context) {
 	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.log", name))
 	createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
 	if !utils.IsFile(logFile) {
-		c.JSON(http.StatusOK, gin.H{
-			"ret": 0,
-			"msg": "日志文件不存在",
-		})
+		utils.GinResult(c, http.StatusBadRequest, "日志文件不存在")
 		return
 	}
 	logContent, _ := utils.Cmd("-c", fmt.Sprintf("tail -%d %s", tail, logFile))
-	c.JSON(http.StatusOK, gin.H{
-		"ret": 1,
-		"msg": "读取成功",
-		"data": gin.H{
-			"create": strings.TrimSpace(utils.ReadFile(createFile)),
-			"log":    strings.TrimSpace(logContent),
-		},
+	utils.GinResult(c, http.StatusOK, "读取成功", gin.H{
+		"create": strings.TrimSpace(utils.ReadFile(createFile)),
+		"log":    strings.TrimSpace(logContent),
 	})
 }
 
@@ -147,18 +117,11 @@ func (model *ServiceModel) WorkspacesCreateLog(c *gin.Context) {
 func (model *ServiceModel) WorkspacesList(c *gin.Context) {
 	list := workspacesList()
 	if list == nil {
-		c.JSON(http.StatusOK, gin.H{
-			"ret": 0,
-			"msg": "暂无数据",
-		})
+		utils.GinResult(c, http.StatusBadRequest, "暂无数据")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"ret": 1,
-		"msg": "获取成功",
-		"data": gin.H{
-			"list": list,
-		},
+	utils.GinResult(c, http.StatusOK, "获取成功", gin.H{
+		"list": list,
 	})
 }
 
@@ -168,10 +131,7 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 	format := c.Query("format")
 	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
 	if !utils.IsDir(dirPath) {
-		c.JSON(http.StatusOK, gin.H{
-			"ret": 0,
-			"msg": "工作区不存在",
-		})
+		utils.GinResult(c, http.StatusBadRequest, "工作区不存在")
 		return
 	}
 	var result string
@@ -182,12 +142,8 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 		result, err = utils.Cmd("-c", fmt.Sprintf("multipass info %s", name))
 	}
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"ret": 0,
-			"msg": "获取失败",
-			"data": gin.H{
-				"err": err.Error(),
-			},
+		utils.GinResult(c, http.StatusBadRequest, "获取失败", gin.H{
+			"err": err.Error(),
 		})
 		return
 	}
@@ -195,12 +151,8 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 	if format == "json" {
 		var data infoModel
 		if err = json.Unmarshal([]byte(result), &data); err != nil {
-			c.JSON(http.StatusOK, gin.H{
-				"ret": 0,
-				"msg": "解析失败",
-				"data": gin.H{
-					"err": err.Error(),
-				},
+			utils.GinResult(c, http.StatusBadRequest, "解析失败", gin.H{
+				"err": err.Error(),
 			})
 			return
 		}
@@ -211,14 +163,10 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 	createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
 	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/code-server/config.yaml", name)))
 	_ = viper.ReadInConfig()
-	c.JSON(http.StatusOK, gin.H{
-		"ret": 1,
-		"msg": "获取成功",
-		"data": gin.H{
-			"create": strings.TrimSpace(utils.ReadFile(createFile)),
-			"pass":   viper.GetString("password"),
-			"info":   info,
-		},
+	utils.GinResult(c, http.StatusOK, "获取成功", gin.H{
+		"create": strings.TrimSpace(utils.ReadFile(createFile)),
+		"pass":   viper.GetString("password"),
+		"info":   info,
 	})
 }
 
@@ -236,17 +184,10 @@ func (model *ServiceModel) WorkspacesDelete(c *gin.Context) {
 	}
 	UpdateProxy()
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"ret": 0,
-			"msg": "工作区删除失败",
-			"data": gin.H{
-				"err": err.Error(),
-			},
+		utils.GinResult(c, http.StatusBadRequest, "工作区删除失败", gin.H{
+			"err": err.Error(),
 		})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"ret": 1,
-		"msg": "工作区删除成功",
-	})
+	utils.GinResult(c, http.StatusOK, "工作区删除成功")
 }

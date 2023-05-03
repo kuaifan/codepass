@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"strings"
 	"time"
 )
 
@@ -48,13 +47,10 @@ var serviceCmd = &cobra.Command{
 		router := gin.Default()
 		//
 		router.Any("/*path", func(c *gin.Context) {
-			if app.ServiceConf.OAuthGithub(c) {
-				return
-			}
-			urlPath := c.Request.URL.Path
 			urlHost := c.Request.Host
 			regFormat := fmt.Sprintf("^((\\d+)-)*([a-zA-Z][a-zA-Z0-9_]*)-code.%s", app.ServiceConf.Host)
 			if utils.Test(urlHost, regFormat) {
+				// 工作区实例
 				reg := regexp.MustCompile(regFormat)
 				match := reg.FindStringSubmatch(urlHost)
 				port := match[2]
@@ -84,21 +80,8 @@ var serviceCmd = &cobra.Command{
 					}
 				}
 			} else {
-				if strings.HasPrefix(urlPath, "/api/workspaces/create/log") {
-					app.ServiceConf.WorkspacesCreateLog(c)
-				} else if strings.HasPrefix(urlPath, "/api/workspaces/create") {
-					app.ServiceConf.WorkspacesCreate(c)
-				} else if strings.HasPrefix(urlPath, "/api/workspaces/list") {
-					app.ServiceConf.WorkspacesList(c)
-				} else if strings.HasPrefix(urlPath, "/api/workspaces/info") {
-					app.ServiceConf.WorkspacesInfo(c)
-				} else if strings.HasPrefix(urlPath, "/api/workspaces/delete") {
-					app.ServiceConf.WorkspacesDelete(c)
-				} else if strings.HasPrefix(urlPath, "/assets") {
-					c.File(fmt.Sprintf("./web/dist%s", urlPath))
-				} else {
-					c.File("./web/dist/index.html")
-				}
+				// 接口、页面
+				app.ServiceConf.OAuth(c)
 			}
 		})
 		//

@@ -22,6 +22,42 @@ const utils = {
     },
 
     /**
+     * 转成数字
+     * @param param
+     * @returns {number|number}
+     */
+    parseInt(param) {
+        const num = parseInt(param);
+        return isNaN(num) ? 0 : num;
+    },
+
+    /**
+     * 是否在数组里
+     * @param key
+     * @param array
+     * @param regular
+     * @returns {boolean|*}
+     */
+    inArray(key, array, regular = false) {
+        if (!utils.isArray(array)) {
+            return false;
+        }
+        if (regular) {
+            return !!array.find(item => {
+                if (item && item.indexOf("*")) {
+                    const rege = new RegExp("^" + item.replace(/[-\/\\^$+?.()|[\]{}]/g, '\\$&').replace(/\*/g, '.*') + "$", "g")
+                    if (rege.test(key)) {
+                        return true
+                    }
+                }
+                return item == key
+            });
+        } else {
+            return array.includes(key);
+        }
+    },
+
+    /**
      * 克隆对象
      * @param myObj
      * @returns {*}

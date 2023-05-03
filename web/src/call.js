@@ -37,15 +37,15 @@ call.interceptors.response.use(
         // 对响应数据做点什么
         // dataAxios 是 axios 返回数据中的 data
         const dataAxios = response.data
-        // 这个状态码是和后端约定的
-        const code = dataAxios.reset
         //
         if (!utils.isJson(dataAxios)) {
-            return Promise.reject({ret: 0, msg: "返回数据格式错误"})
+            return Promise.reject({code: 500, msg: "返回数据格式错误"})
         }
-        if (dataAxios.ret <= 0) {
-            if (dataAxios.ret === -301) {
-                window.location.href = dataAxios.data.location
+        if (dataAxios.code !== 200) {
+            if (dataAxios.code === 301) {
+                window.location.href = dataAxios.msg
+            } else if (dataAxios.code === 401) {
+                window.location.reload()
             }
             return Promise.reject(dataAxios)
         }
@@ -55,7 +55,7 @@ call.interceptors.response.use(
         // 超出 2xx 范围的状态码都会触发该函数。
         // 对响应错误做点什么
         // console.log(error)
-        return Promise.reject({ret: 0, msg: "请求失败", "data": error})
+        return Promise.reject({ret: 500, msg: "请求失败", data: error})
     }
 )
 

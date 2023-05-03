@@ -6,7 +6,7 @@ import {NaiveUiResolver} from 'unplugin-vue-components/resolvers'
 import autoprefixer from 'autoprefixer';
 
 export default defineConfig({
-    base: './',
+    base: '/',
     server: {
         proxy: {
             '/api': {

@@ -4,7 +4,9 @@
             <n-message-provider>
                 <n-notification-provider>
                     <n-dialog-provider>
-                        <Workspaces/>
+                        <router-view v-if="resultCode === 0"/>
+                        <Login v-else-if="resultCode === 401"/>
+                        <Result v-else/>
                         <n-global-style/>
                     </n-dialog-provider>
                 </n-notification-provider>
@@ -18,9 +20,13 @@ import {defineComponent} from "vue";
 import {siteSetup} from './store'
 
 import Workspaces from "./pages/Workspaces.vue";
+import Login from "./components/Login.vue";
+import Result from "./components/result.vue";
 
 export default defineComponent({
     components: {
+        Result,
+        Login,
         Workspaces,
     },
     setup() {
