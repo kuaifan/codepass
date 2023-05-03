@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"net/http"
 	"os"
 	"strings"
 )
@@ -18,36 +17,36 @@ var (
 // OAuthGithub Github授权
 func (model *ServiceModel) OAuthGithub(c *gin.Context) bool {
 	urlPath := c.Request.URL.Path
-	_, homeUrl := instanceDomain("")
+	_, homePage := instanceDomain("")
 	if strings.HasPrefix(urlPath, "/oauth/redirect") {
 		code := c.Query("code")
 		githubToken, err := githubGetToken(clientId, clientSecret, code)
 		if err != nil {
-			c.String(http.StatusBadRequest, fmt.Sprintf("授权失败：%s", removeCriticalInformation(err.Error())))
+			utils.GinResponse200(c, 0, fmt.Sprintf("授权失败：%s", removeCriticalInformation(err.Error())))
 			return true
 		}
 		if githubToken.AccessToken == "" {
-			c.String(http.StatusBadRequest, "授权失败：bad_verification_code")
+			utils.GinResponse200(c, 0, "授权失败：bad_verification_code")
 			return true
 		}
 		userInfo, err := githubGetUserInfo(githubToken.AccessToken)
 		if err != nil {
-			c.String(http.StatusBadRequest, fmt.Sprintf("获取用户信息失败：%s", removeCriticalInformation(err.Error())))
+			utils.GinResponse200(c, 0, fmt.Sprintf("获取用户信息失败：%s", removeCriticalInformation(err.Error())))
 			return true
 		}
 		apiToken := utils.GenerateString(32)
 		userData, err := json.Marshal(&userInfo)
 		if err != nil {
-			c.String(http.StatusBadRequest, fmt.Sprintf("解析用户信息失败：%s", removeCriticalInformation(err.Error())))
+			utils.GinResponse200(c, 0, fmt.Sprintf("解析用户信息失败：%s", removeCriticalInformation(err.Error())))
 			return true
 		}
 		err = utils.WriteFile(utils.RunDir(fmt.Sprintf("/.codepass/users/%s", apiToken)), string(userData))
 		if err != nil {
-			c.String(http.StatusBadRequest, fmt.Sprintf("AccessToken 保存失败：%s", removeCriticalInformation(err.Error())))
+			utils.GinResponse200(c, 0, fmt.Sprintf("AccessToken 保存失败：%s", removeCriticalInformation(err.Error())))
 			return true
 		}
-		c.SetCookie("apiToken", apiToken, 0, "/", homeUrl, false, true)
-		c.Redirect(http.StatusMovedPermanently, homeUrl)
+		c.SetCookie("apiToken", apiToken, 0, "/", homePage, false, true)
+		utils.GinResponse301(c, homePage)
 		return true
 	}
 	var apiFile string
@@ -64,23 +63,19 @@ func (model *ServiceModel) OAuthGithub(c *gin.Context) bool {
 		}
 	}
 	if apiToken == "" {
-		location := fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s/oauth/redirect", clientId, homeUrl)
-		c.Redirect(http.StatusMovedPermanently, location)
+		location := fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s/oauth/redirect", clientId, homePage)
+		utils.GinResponse301(c, location)
 		return true
 	}
 	if strings.HasPrefix(urlPath, "/oauth/user") {
-		userInfo.AccessToken = "" // 防止前端泄露token
-		c.JSON(http.StatusOK, gin.H{
-			"ret":  1,
-			"msg":  "获取成功",
-			"data": userInfo,
-		})
+		userInfo.AccessToken = "" // 清空防止前端泄露AccessToken
+		utils.GinResponse200(c, 1, "获取成功", userInfo)
 		return true
 	} else if strings.HasPrefix(urlPath, "/oauth/logout") {
 		if utils.IsFile(apiFile) {
 			_ = os.Remove(apiFile)
 		}
-		c.String(http.StatusOK, "退出成功")
+		utils.GinResponse200(c, 1, "退出成功")
 		return true
 	}
 	return false

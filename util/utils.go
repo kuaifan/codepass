@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"math/rand"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -320,6 +321,12 @@ func Test(str, pattern string) bool {
 	}
 }
 
+// RunDir 前面加上绝对路径
+func RunDir(path string) string {
+	wd, _ := os.Getwd()
+	return fmt.Sprintf("%s%s", wd, path)
+}
+
 // GinInput Gin获取参数（优先POST、取Query）
 func GinInput(c *gin.Context, key string) string {
 	if c.PostForm(key) != "" {
@@ -328,8 +335,30 @@ func GinInput(c *gin.Context, key string) string {
 	return strings.TrimSpace(c.Query(key))
 }
 
-// RunDir 前面加上绝对路径
-func RunDir(path string) string {
-	wd, _ := os.Getwd()
-	return fmt.Sprintf("%s%s", wd, path)
+// GinResponse200 根据请求返回json或string
+func GinResponse200(c *gin.Context, code int, msg string, data ...any) {
+	if strings.Contains(c.GetHeader("Accept"), "application/json") {
+		c.JSON(http.StatusOK, gin.H{
+			"ret":  code,
+			"msg":  msg,
+			"data": data,
+		})
+	} else {
+		c.String(http.StatusOK, msg)
+	}
+}
+
+// GinResponse301 根据请求返回json或string
+func GinResponse301(c *gin.Context, location string) {
+	if strings.Contains(c.GetHeader("Accept"), "application/json") {
+		c.JSON(http.StatusOK, gin.H{
+			"ret": -301,
+			"msg": "301 Moved Permanently",
+			"data": gin.H{
+				"location": location,
+			},
+		})
+	} else {
+		c.Redirect(http.StatusMovedPermanently, location)
+	}
 }

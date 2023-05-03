@@ -24,7 +24,7 @@ call.interceptors.request.use(
     },
     function (error) {
         // 对请求错误做些什么
-        console.log(error)
+        // console.log(error)
         return Promise.reject(error)
     }
 )
@@ -43,7 +43,10 @@ call.interceptors.response.use(
         if (!utils.isJson(dataAxios)) {
             return Promise.reject({ret: 0, msg: "返回数据格式错误"})
         }
-        if (dataAxios.ret !== 1) {
+        if (dataAxios.ret <= 0) {
+            if (dataAxios.ret === -301) {
+                window.location.href = dataAxios.data.location
+            }
             return Promise.reject(dataAxios)
         }
         return dataAxios
@@ -51,7 +54,7 @@ call.interceptors.response.use(
     function (error) {
         // 超出 2xx 范围的状态码都会触发该函数。
         // 对响应错误做点什么
-        console.log(error)
+        // console.log(error)
         return Promise.reject({ret: 0, msg: "请求失败", "data": error})
     }
 )
