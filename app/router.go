@@ -104,7 +104,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 	}
 	// 工作区接口
 	if strings.HasPrefix(urlPath, "/api/workspaces/create") {
-		ServiceConf.WorkspacesCreate(c)
+		ServiceConf.WorkspacesCreate(c) // post
 		return
 	}
 	if strings.HasPrefix(urlPath, "/api/workspaces/log") {

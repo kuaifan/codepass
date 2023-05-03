@@ -84,7 +84,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		"REPOS_OWNER": reposOwner,
 		"REPOS_NAME":  reposName,
 		"REPOS_URL":   repos,
-		"CLONE_CMD":   fmt.Sprintf("git clone https://oauth2:%s@github.com/%s/%s.git ~/workspace/%s", ServiceConf.GithubUserInfo.AccessToken, reposOwner, reposName, reposName),
+		"CLONE_CMD":   fmt.Sprintf("git clone https://oauth2:%s@github.com/%s/%s.git /workspace/%s", ServiceConf.GithubUserInfo.AccessToken, reposOwner, reposName, reposName),
 
 		"CPUS":   cpus,
 		"DISK":   disk,

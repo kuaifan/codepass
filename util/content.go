@@ -110,7 +110,6 @@ runcmd:
   - sudo apt-get install -y nodejs
   - sudo curl -sSL https://get.daocloud.io/docker | sh
   - sudo systemctl start docker
-  - {{.CLONE_CMD}}
 EOF
 mkdir -p {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config
 mkdir -p {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/workspace
@@ -146,6 +145,7 @@ repos-name: {{.REPOS_NAME}}
 repos-url: {{.REPOS_URL}}
 EOF
 sudo ln -s \${HOME}/workspace /workspace
+{{.CLONE_CMD}}
 EOE
 
 # 优化 code-server 页面资源
