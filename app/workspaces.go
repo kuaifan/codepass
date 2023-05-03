@@ -12,15 +12,15 @@ import (
 	"strings"
 )
 
-// WorkspacesCreate 创建工作区
+// WorkspacesCreate 创建工作区（post）
 func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	// 参数校验
 	var (
-		repos  = c.Query("repos")
-		pass   = c.Query("pass")
-		cpus   = c.Query("cpus")
-		disk   = c.Query("disk")
-		memory = c.Query("memory")
+		repos  = utils.GinInput(c, "repos")
+		pass   = utils.GinInput(c, "pass")
+		cpus   = utils.GinInput(c, "cpus")
+		disk   = utils.GinInput(c, "disk")
+		memory = utils.GinInput(c, "memory")
 	)
 	if repos == "" {
 		utils.GinResult(c, http.StatusBadRequest, "储存库地址不能为空")

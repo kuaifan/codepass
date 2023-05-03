@@ -190,7 +190,7 @@ export default defineComponent({
                 data.disk = data.disk + "GB"
                 data.memory = data.memory + "GB"
                 call({
-                    method: "get",
+                    method: "post",
                     url: 'workspaces/create',
                     data
                 }).then(({msg}) => {
