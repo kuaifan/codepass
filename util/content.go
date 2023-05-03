@@ -144,6 +144,11 @@ repos-owner: {{.REPOS_OWNER}}
 repos-name: {{.REPOS_NAME}}
 repos-url: {{.REPOS_URL}}
 EOF
+EOE
+
+# Cloning
+CREATE "Cloning"
+multipass exec {{.NAME}} -- sh <<-EOE
 sudo ln -s \${HOME}/workspace /workspace
 {{.CLONE_CMD}}
 EOE

@@ -37,9 +37,9 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	if utils.Test(repos, re) {
 		reg := regexp.MustCompile(re)
 		match := reg.FindStringSubmatch(repos)
-		reposOwner = match[1]
-		reposName = match[2]
-		name = fmt.Sprintf("%s-%s-%s", reposOwner, reposName, utils.GenerateString(8))
+		reposOwner = strings.ToLower(match[1])
+		reposName = strings.ToLower(match[2])
+		name = strings.ToLower(fmt.Sprintf("%s-%s-%s", reposOwner, reposName, utils.GenerateString(8)))
 	} else {
 		utils.GinResult(c, http.StatusBadRequest, "暂不支持此储存库地址")
 	}
