@@ -20,7 +20,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 	urlPath := c.Request.URL.Path
 	// 静态资源
 	if strings.HasPrefix(urlPath, "/assets") {
-		c.File(fmt.Sprintf("./web/dist%s", urlPath))
+		c.File(utils.RunDir(fmt.Sprintf("/web/dist%s", urlPath)))
 		return
 	}
 	// 退出登录
@@ -123,5 +123,5 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 	// 页面输出
 	c.SetCookie("result_code", "", -1, "/", c.Request.Host, false, false)
 	c.SetCookie("result_msg", "", -1, "/", c.Request.Host, false, false)
-	c.File("./web/dist/index.html")
+	c.HTML(http.StatusOK, "/web/dist/index.html", gin.H{})
 }

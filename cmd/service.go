@@ -7,11 +7,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
 	"github.com/unrolled/secure"
+	"html/template"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -25,7 +28,7 @@ var serviceCmd = &cobra.Command{
 		}
 		_, err := utils.Cmd("-c", "multipass version")
 		if err != nil {
-			utils.PrintError("未安装 multipass")
+			utils.PrintError("未安装 multipass，请使用 ./codepass install 命令安装或手动安装")
 			os.Exit(1)
 		}
 		err = utils.WriteFile(utils.RunDir("/.codepass/service"), utils.FormatYmdHis(time.Now()))
@@ -45,6 +48,12 @@ var serviceCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		router := gin.Default()
+		templates, err := loadTemplate()
+		if err != nil {
+			utils.PrintError(err.Error())
+			os.Exit(1)
+		}
+		router.SetHTMLTemplate(templates)
 		//
 		router.Any("/*path", func(c *gin.Context) {
 			urlHost := c.Request.Host
@@ -86,11 +95,30 @@ var serviceCmd = &cobra.Command{
 		})
 		//
 		router.Use(tlsHandler())
-		err := router.RunTLS(fmt.Sprintf(":%s", app.ServiceConf.Port), app.ServiceConf.Crt, app.ServiceConf.Key)
+		err = router.RunTLS(fmt.Sprintf(":%s", app.ServiceConf.Port), app.ServiceConf.Crt, app.ServiceConf.Key)
 		if err != nil {
 			utils.PrintError(err.Error())
 		}
 	},
+}
+
+func loadTemplate() (*template.Template, error) {
+	t := template.New("")
+	for name, file := range Assets.Files {
+		// 可以用.tmpl .html
+		if file.IsDir() || !strings.HasSuffix(name, ".html") {
+			continue
+		}
+		h, err := io.ReadAll(file)
+		if err != nil {
+			return nil, err
+		}
+		t, err = t.New(name).Parse(string(h))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return t, nil
 }
 
 func tlsHandler() gin.HandlerFunc {

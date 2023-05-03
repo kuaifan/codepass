@@ -361,7 +361,7 @@ func GinResult(c *gin.Context, code int, content string, values ...any) {
 		if code == http.StatusMovedPermanently {
 			c.Redirect(code, content)
 		} else {
-			c.File("./web/dist/index.html")
+			c.HTML(http.StatusOK, "/web/dist/index.html", gin.H{})
 		}
 	}
 }
