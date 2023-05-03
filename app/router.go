@@ -28,7 +28,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 				_ = os.Remove(apiFile)
 			}
 		}
-		c.SetCookie("result_token", "", -1, "/", c.Request.Host, false, false)
+		c.SetCookie("result_token", "", -1, "/", utils.GinHost(c), false, false)
 		utils.GinResult(c, http.StatusOK, "退出成功")
 		return
 	}
@@ -60,7 +60,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 			utils.GinResult(c, http.StatusOK, fmt.Sprintf("AccessToken 保存失败：%s", removeCriticalInformation(err.Error())))
 			return
 		}
-		c.SetCookie("result_token", userToken, 0, "/", c.Request.Host, false, false)
+		c.SetCookie("result_token", userToken, 0, "/", utils.GinHost(c), false, false)
 		utils.GinResult(c, http.StatusMovedPermanently, "/")
 		return
 	}
@@ -118,7 +118,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 		return
 	}
 	// 页面输出
-	c.SetCookie("result_code", "", -1, "/", c.Request.Host, false, false)
-	c.SetCookie("result_msg", "", -1, "/", c.Request.Host, false, false)
+	c.SetCookie("result_code", "", -1, "/", utils.GinHost(c), false, false)
+	c.SetCookie("result_msg", "", -1, "/", utils.GinHost(c), false, false)
 	c.HTML(http.StatusOK, "/web/dist/index.html", gin.H{})
 }
