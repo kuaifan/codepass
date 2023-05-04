@@ -114,7 +114,7 @@ JUDGEA() {
 }
 JUDGEB() {
 	local desc="$1"
-	local state=$(multipass exec {{.NAME}} -- sh -c 'cat /tmp/.code-judge')
+	local state=$(multipass exec {{.NAME}} -- sudo sh -c 'cat /tmp/.code-judge')
 	if [ "$state" = "success" ]; then
 		echo "$desc 完成"
 	else
@@ -166,7 +166,7 @@ JUDGEA "Launch"
 CREATE "Installing"
 multipass exec {{.NAME}} -- sh <<-EOE
 curl -fsSL https://code-server.dev/install.sh | sh
-sudo echo ".card-box > .header {display:none}" >> /usr/lib/code-server/src/browser/pages/login.css
+sudo sh -c 'echo ".card-box > .header {display:none}" >> /usr/lib/code-server/src/browser/pages/login.css'
 sudo rm -f /usr/lib/code-server/src/browser/media/pwa-icon-192.png
 sudo rm -f /usr/lib/code-server/src/browser/media/pwa-icon-512.png
 sudo rm -f /usr/lib/code-server/src/browser/media/favicon-dark-support.svg

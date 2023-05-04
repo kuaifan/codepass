@@ -55,7 +55,20 @@
                     <n-list hoverable :show-divider="false">
                         <n-list-item v-for="item in searchList">
                             <div class="item">
-                                <div class="name">{{ item.name }}</div>
+                                <div class="name">
+                                    <ul>
+                                        <li>{{ item.name }}</li>
+                                        <li class="repos">
+                                            <n-button
+                                                text
+                                                tag="a"
+                                                :href="item.repos_url"
+                                                target="_blank">
+                                                {{ item.repos_url }}
+                                            </n-button>
+                                        </li>
+                                    </ul>
+                                </div>
                                 <div class="release">{{ item.release || '-' }}</div>
                                 <div class="state" @click="onState(item)">
                                     <div v-if="stateLoading(item)" class="load">
@@ -258,8 +271,8 @@ export default defineComponent({
             onLoad(true)
         }
         const stateLoading = (item) => {
-            return ['Success', ''].indexOf(item.create) !== -1
-                && ['Failed', ''].indexOf(item.state) !== -1
+            const state = stateText(item)
+            return ['Success', 'Failed', 'Unknown', 'Error'].indexOf(state) === -1
         }
         const stateStyle = (item) => {
             const state = stateText(item)
@@ -443,11 +456,38 @@ export default defineComponent({
             }
 
             .name {
-                width: 35%;
+                width: 40%;
+                ul {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    padding: 0;
+                    margin: 0;
+                    > li {
+                        list-style: none;
+                        padding: 0 6px 0 0;
+                        margin: 0;
+                        font-size: 16px;
+                        font-weight: 600;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        &.repos {
+                            font-size: 14px;
+                            font-weight: normal;
+                            > a {
+                                opacity: 0.5;
+                                &:hover {
+                                    opacity: 1;
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             .release {
-                width: 35%;
+                width: 30%;
             }
 
             .state {
