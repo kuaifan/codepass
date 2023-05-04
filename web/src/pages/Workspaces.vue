@@ -171,7 +171,7 @@ export default defineComponent({
                 key: "delete",
             }
         ])
-        const operationItem = ref({url: '', pass: '', repos_name: ''})
+        const operationItem = ref({url: '', password: '', repos_name: ''})
 
         const operationLabel = (option) => {
             if (option.disabled === true) {
@@ -199,7 +199,7 @@ export default defineComponent({
                     [
                         h('input', {type: 'hidden', name: 'base', value: '.'}),
                         h('input', {type: 'hidden', name: 'href', value: action}),
-                        h('input', {type: 'hidden', name: 'password', value: operationItem.value.pass}),
+                        h('input', {type: 'hidden', name: 'password', value: operationItem.value.password}),
                         h(NButton, {
                             text: true,
                             attrType: 'submit'

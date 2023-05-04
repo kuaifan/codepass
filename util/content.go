@@ -81,7 +81,7 @@ CmdPath=$0
 
 # 全局变量
 # {{.NAME}}
-# {{.PASS}}
+# {{.PASSWORD}}
 # {{.PROXY_DOMAIN}}
 # {{.PROXY_URI}}
 
@@ -103,21 +103,32 @@ CREATE() {
 
 # 准备工作
 CREATE "Preparing"
-cat > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/init.yaml <<-EOF
-#cloud-config
+mkdir -p {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/code-server
+mkdir -p {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/workspace
+cat > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/info.yaml <<-EOF
+owner_name: {{.OWNER_NAME}}
+repos_owner: {{.REPOS_OWNER}}
+repos_name: {{.REPOS_NAME}}
+repos_url: {{.REPOS_URL}}
+EOF
+cat > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/run.yaml <<-EOF
 runcmd:
   - curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
   - sudo apt-get install -y nodejs
   - sudo curl -sSL https://get.daocloud.io/docker | sh
   - sudo systemctl start docker
 EOF
-mkdir -p {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config
-mkdir -p {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/workspace
+cat > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/code-server/config.yaml <<-EOF
+bind-addr: 0.0.0.0:55123
+auth: password
+password: {{.PASSWORD}}
+cert: false
+EOF
 
 # 启动虚拟机
 CREATE "Launching"
 start="multipass launch focal --name {{.NAME}}"
-start="$start --cloud-init {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/init.yaml"
+start="$start --cloud-init {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/run.yaml"
 start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config:~/.config"
 start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/workspace:~/workspace"
 [ -n "{{.CPUS}}" ] && start="$start --cpus {{.CPUS}}"
@@ -129,30 +140,6 @@ $start
 CREATE "Installing"
 multipass exec {{.NAME}} -- sh -c 'curl -fsSL https://code-server.dev/install.sh | sh'
 
-# 初始化 code-server 配置
-CREATE "Configuring"
-multipass exec {{.NAME}} -- sh <<-EOE
-mkdir -p ~/.config/code-server
-cat > ~/.config/code-server/config.yaml <<-EOF
-bind-addr: 0.0.0.0:55123
-auth: password
-password: {{.PASS}}
-cert: false
-
-owner-name: {{.OWNER_NAME}}
-repos-owner: {{.REPOS_OWNER}}
-repos-name: {{.REPOS_NAME}}
-repos-url: {{.REPOS_URL}}
-EOF
-EOE
-
-# Cloning
-CREATE "Cloning"
-multipass exec {{.NAME}} -- sh <<-EOE
-sudo ln -s \${HOME}/workspace /workspace
-{{.CLONE_CMD}}
-EOE
-
 # 优化 code-server 页面资源
 multipass exec {{.NAME}} -- sudo sh <<-EOE
 echo ".card-box > .header {display:none}" >> /usr/lib/code-server/src/browser/pages/login.css
@@ -160,6 +147,13 @@ rm -f /usr/lib/code-server/src/browser/media/pwa-icon-192.png
 rm -f /usr/lib/code-server/src/browser/media/pwa-icon-512.png
 rm -f /usr/lib/code-server/src/browser/media/favicon-dark-support.svg
 rm -f /usr/lib/code-server/src/browser/media/favicon.ico
+EOE
+
+# Cloning
+CREATE "Cloning"
+multipass exec {{.NAME}} -- sh <<-EOE
+sudo ln -s \${HOME}/workspace /workspace
+{{.CLONE_CMD}}
 EOE
 
 # 启动 code-server

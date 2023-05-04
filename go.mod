@@ -3,12 +3,11 @@ module codepass
 go 1.20
 
 require (
-	github.com/gin-contrib/location v0.0.2
 	github.com/gin-gonic/gin v1.9.0
+	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
 	github.com/unrolled/secure v1.13.0
-	golang.org/x/crypto v0.5.0
 )
 
 require (
@@ -22,9 +21,6 @@ require (
 	github.com/goccy/go-json v0.10.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15 // indirect
-	github.com/jessevdk/go-assets-builder v0.0.0-20130903091706-b8483521738f // indirect
-	github.com/jessevdk/go-flags v1.5.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
@@ -42,6 +38,7 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.9 // indirect
 	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
+	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect

@@ -16,6 +16,8 @@ all: assets
 	)
 
 build: assets
+	# go get github.com/jessevdk/go-assets-builder
+    # go install github.com/jessevdk/go-assets-builder@latest
 	env CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o .
 
 install: build

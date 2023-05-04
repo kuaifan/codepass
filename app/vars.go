@@ -43,8 +43,8 @@ type instanceModel struct {
 	Release string   `json:"release"`
 	State   string   `json:"state"`
 
-	Create string `json:"create"`
-	Pass   string `json:"pass"`
+	Create   string `json:"create"`
+	Password string `json:"password"`
 
 	OwnerName  string `json:"owner_name"`
 	ReposOwner string `json:"repos_owner"`
@@ -145,15 +145,17 @@ func instanceBase(entry *instanceModel) *instanceModel {
 	createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
 	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/code-server/config.yaml", name)))
 	_ = viper.ReadInConfig()
+	entry.Password = viper.GetString("password")
+	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/info.yaml", name)))
+	_ = viper.ReadInConfig()
+	entry.OwnerName = viper.GetString("owner_name")
+	entry.ReposOwner = viper.GetString("repos_owner")
+	entry.ReposName = viper.GetString("repos_name")
+	entry.ReposUrl = viper.GetString("repos_url")
 	if len(entry.Ipv4) > 0 {
 		entry.Ip = entry.Ipv4[0]
 	}
 	entry.Create = strings.TrimSpace(utils.ReadFile(createFile))
-	entry.Pass = viper.GetString("password")
-	entry.OwnerName = viper.GetString("owner-name")
-	entry.ReposOwner = viper.GetString("repos-owner")
-	entry.ReposName = viper.GetString("repos-name")
-	entry.ReposUrl = viper.GetString("repos-url")
 	entry.Domain, entry.Url = instanceDomain(name)
 	return entry
 }

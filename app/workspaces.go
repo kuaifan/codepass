@@ -16,11 +16,11 @@ import (
 func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	// 参数校验
 	var (
-		repos  = utils.GinInput(c, "repos")
-		pass   = utils.GinInput(c, "pass")
-		cpus   = utils.GinInput(c, "cpus")
-		disk   = utils.GinInput(c, "disk")
-		memory = utils.GinInput(c, "memory")
+		repos    = utils.GinInput(c, "repos")
+		password = utils.GinInput(c, "password")
+		cpus     = utils.GinInput(c, "cpus")
+		disk     = utils.GinInput(c, "disk")
+		memory   = utils.GinInput(c, "memory")
 	)
 	if repos == "" {
 		utils.GinResult(c, http.StatusBadRequest, "储存库地址不能为空")
@@ -43,10 +43,10 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	} else {
 		utils.GinResult(c, http.StatusBadRequest, "暂不支持此储存库地址")
 	}
-	if pass == "" {
-		pass = utils.GenerateString(32)
+	if password == "" {
+		password = utils.GenerateString(32)
 	}
-	if !utils.Test(pass, "^[a-zA-Z0-9_]*$") {
+	if !utils.Test(password, "^[a-zA-Z0-9_]*$") {
 		utils.GinResult(c, http.StatusBadRequest, "工作区密码只允许数字、字母、下划线组成")
 		return
 	}
@@ -76,7 +76,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.log", name))
 	err := utils.WriteFile(cmdFile, utils.TemplateContent(utils.CreateExecContent, map[string]any{
 		"NAME":         name,
-		"PASS":         pass,
+		"PASSWORD":     password,
 		"PROXY_DOMAIN": proxyDomain,
 		"PROXY_URI":    proxyUri,
 
@@ -104,8 +104,8 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	}()
 	//
 	utils.GinResult(c, http.StatusOK, "创建工作区成功", gin.H{
-		"name": name,
-		"pass": pass,
+		"name":     name,
+		"password": password,
 	})
 }
 
@@ -189,13 +189,22 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 	createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
 	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/code-server/config.yaml", name)))
 	_ = viper.ReadInConfig()
+	password := viper.GetString("password")
+	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/info.yaml", name)))
+	_ = viper.ReadInConfig()
+	var (
+		ownerName  = viper.GetString("owner_name")
+		reposOwner = viper.GetString("repos_owner")
+		reposName  = viper.GetString("repos_name")
+		reposUrl   = viper.GetString("repos_url")
+	)
 	utils.GinResult(c, http.StatusOK, "获取成功", gin.H{
 		"create":      strings.TrimSpace(utils.ReadFile(createFile)),
-		"pass":        viper.GetString("password"),
-		"owner_name":  viper.GetString("owner-name"),
-		"repos_owner": viper.GetString("repos-owner"),
-		"repos_name":  viper.GetString("repos-name"),
-		"repos_url":   viper.GetString("repos-url"),
+		"password":    password,
+		"owner_name":  ownerName,
+		"repos_owner": reposOwner,
+		"repos_name":  reposName,
+		"repos_url":   reposUrl,
 		"info":        info,
 	})
 }
