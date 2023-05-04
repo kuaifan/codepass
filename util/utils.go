@@ -98,8 +98,13 @@ func ReadFile(path string) string {
 	return string(content)
 }
 
-// WriteFile 保存文件
+// WriteFile 保存文件（string）
 func WriteFile(path string, content string) error {
+	return WriteByte(path, []byte(content))
+}
+
+// WriteByte 保存文件（byte）
+func WriteByte(path string, fileByte []byte) error {
 	fileDir := filepath.Dir(path)
 	if !Exists(fileDir) {
 		err := os.MkdirAll(fileDir, os.ModePerm)
@@ -107,7 +112,6 @@ func WriteFile(path string, content string) error {
 			return err
 		}
 	}
-	var fileByte = []byte(content)
 	return os.WriteFile(path, fileByte, 0666)
 }
 

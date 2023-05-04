@@ -142,17 +142,28 @@ var serviceCmd = &cobra.Command{
 func loadTemplate() (*template.Template, error) {
 	t := template.New("")
 	for name, file := range Assets.Files {
-		// 可以用.tmpl .html
-		if file.IsDir() || !strings.HasSuffix(name, ".html") {
+		if file.IsDir() {
 			continue
 		}
-		h, err := io.ReadAll(file)
-		if err != nil {
-			return nil, err
+		if strings.HasPrefix(name, "/web/dist/assets/") {
+			h, err := io.ReadAll(file)
+			if err != nil {
+				return nil, err
+			}
+			err = utils.WriteByte(utils.RunDir(fmt.Sprintf("/.codepass%s", name)), h)
+			if err != nil {
+				return nil, err
+			}
 		}
-		t, err = t.New(name).Parse(string(h))
-		if err != nil {
-			return nil, err
+		if strings.HasSuffix(name, ".html") {
+			h, err := io.ReadAll(file)
+			if err != nil {
+				return nil, err
+			}
+			t, err = t.New(name).Parse(string(h))
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	return t, nil

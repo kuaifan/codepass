@@ -16,7 +16,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 	urlPath := c.Request.URL.Path
 	// 静态资源
 	if strings.HasPrefix(urlPath, "/assets") {
-		c.File(utils.RunDir(fmt.Sprintf("/web/dist%s", urlPath)))
+		c.File(utils.RunDir(fmt.Sprintf("/.codepass/web/dist%s", urlPath)))
 		return
 	}
 	// 退出登录
