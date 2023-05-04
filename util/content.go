@@ -144,6 +144,8 @@ runcmd:
   - sudo systemctl start docker
 EOF
 cat > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/code-server/config.yaml <<-EOF
+app-name: CodePass
+disable-workspace-trust: true
 bind-addr: 0.0.0.0:55123
 auth: password
 password: {{.PASSWORD}}
@@ -197,6 +199,7 @@ JUDGEB "Clone"
 # 启动 code-server
 CREATE "Starting"
 multipass exec {{.NAME}} -- sudo sh <<-EOE
+systemctl set-environment CODE_PASS_IMAGE={{.IMAGE}}
 systemctl set-environment PROXY_DOMAIN={{.PROXY_DOMAIN}}
 systemctl set-environment VSCODE_PROXY_URI={{.PROXY_URI}}
 systemctl set-environment DEFAULT_WORKSPACE=/workspace/{{.REPOS_NAME}}
