@@ -1,0 +1,62 @@
+name: release
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.20
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - id: get-version
+        uses: battila7/get-version-action@v2
+
+      - uses: actions/checkout@v3
+
+      - id: build
+        run: |
+          cd web
+          npm install
+          npm run build
+          cd ..
+
+          version=${{ steps.get-version.outputs.version-without-v }}
+          go mod tidy
+          make
+          
+          mkdir codepass_darwin_amd64
+          cp config.yaml codepass_darwin_amd64
+          mv release/codepass_darwin_amd64 codepass_darwin_amd64/codepass
+          tar zcf codepass_darwin_amd64_$version.tar.gz codepass_darwin_amd64
+          
+          mkdir codepass_darwin_arm64
+          cp config.yaml codepass_darwin_arm64
+          mv release/codepass_darwin_arm64 codepass_darwin_arm64/codepass
+          tar zcf codepass_darwin_arm64_$version.tar.gz codepass_darwin_arm64
+          
+          mkdir codepass_linux_amd64
+          cp config.yaml codepass_linux_amd64
+          mv release/codepass_linux_amd64 codepass_linux_amd64/codepass
+          tar zcf codepass_linux_amd64_$version.tar.gz codepass_linux_amd64
+          
+          mkdir codepass_linux_arm64
+          cp config.yaml codepass_linux_arm64
+          mv release/codepass_linux_arm64 codepass_linux_arm64/codepass
+          tar zcf codepass_linux_arm64_$version.tar.gz codepass_linux_arm64
+
+      - name: Upload assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "codepass_*.tar.gz"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
