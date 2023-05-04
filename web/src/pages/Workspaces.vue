@@ -71,7 +71,10 @@
                                 </div>
                                 <div class="release">{{ item.release || '-' }}</div>
                                 <div class="state" @click="onState(item)">
-                                    <div v-if="stateLoading(item)" class="load">
+                                    <div v-if="stateRunning(item)" class="run">
+                                        <n-badge type="success" show-zero dot />
+                                    </div>
+                                    <div v-else-if="stateLoading(item)" class="load">
                                         <Loading/>
                                     </div>
                                     <div class="text" :style="stateStyle(item)">{{ stateText(item) }}</div>
@@ -270,9 +273,13 @@ export default defineComponent({
             createModal.value = false
             onLoad(true)
         }
+        const stateRunning = (item) => {
+            const state = stateText(item)
+            return state === 'Running'
+        }
         const stateLoading = (item) => {
             const state = stateText(item)
-            return ['Success', 'Failed', 'Unknown', 'Error'].indexOf(state) === -1
+            return ['Running', 'Success', 'Failed', 'Unknown', 'Error'].indexOf(state) === -1
         }
         const stateStyle = (item) => {
             const state = stateText(item)
@@ -349,6 +356,7 @@ export default defineComponent({
             operationSelect,
             addIcon,
             createDone,
+            stateRunning,
             stateLoading,
             stateStyle,
             stateText,
@@ -495,11 +503,20 @@ export default defineComponent({
                 display: flex;
                 align-items: center;
 
-                .load {
+                .load,
+                .run {
                     flex-shrink: 0;
                     width: 16px;
                     height: 16px;
                     margin-right: 6px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .run {
+                    .n-badge {
+                        transform: scale(1.2);
+                    }
                 }
 
                 .text {

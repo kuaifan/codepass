@@ -31,12 +31,15 @@
                 </template>
             </n-input>
         </n-form-item>
-        <n-form-item v-show="advanced" path="disk" label="磁盘" placeholder="请输入磁盘大小">
-            <n-input v-model:value="formData.disk">
+        <n-form-item v-show="advanced" path="disk" label="磁盘">
+            <n-input v-model:value="formData.disk" placeholder="请输入磁盘大小">
                 <template #suffix>
                     GB
                 </template>
             </n-input>
+        </n-form-item>
+        <n-form-item v-show="advanced" path="image" label="系统">
+            <n-select v-model:value="formData.image" :options="imageList" placeholder="请选择系统版本"/>
         </n-form-item>
         <n-row :gutter="[0, 24]">
             <n-col :span="24">
@@ -68,6 +71,7 @@ interface ModelType {
     cpus: string | null
     memory: string | null
     disk: string | null
+    image: string | null
 }
 
 export default defineComponent({
@@ -84,6 +88,7 @@ export default defineComponent({
             cpus: "2",
             memory: "2",
             disk: "20",
+            image: "20.04",
         })
 
         const reposRef = ref(null)
@@ -106,6 +111,12 @@ export default defineComponent({
                     value: item['html_url']
                 }
             })
+        })
+        const imageList = ["18.04", "20.04", "22.04", "22.10"].map(item => {
+            return {
+                label: `Ubuntu ${item}`,
+                value: item
+            }
         })
 
         const formRules: FormRules = {
@@ -210,6 +221,7 @@ export default defineComponent({
             formData,
             formRules,
             reposComputed,
+            imageList,
             reposBlur,
             handleSubmit
         }

@@ -21,6 +21,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		cpus     = utils.GinInput(c, "cpus")
 		disk     = utils.GinInput(c, "disk")
 		memory   = utils.GinInput(c, "memory")
+		image    = utils.GinInput(c, "image")
 	)
 	if repos == "" {
 		utils.GinResult(c, http.StatusBadRequest, "储存库地址不能为空")
@@ -60,6 +61,12 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	if memory != "" && utils.Test(memory, "^\\d+$") {
 		memory = fmt.Sprintf("%sGB", memory)
 	}
+	if image == "" {
+		image = "20.04"
+	} else if !utils.InArray(image, []string{"18.04", "20.04", "22.04", "22.10"}) {
+		utils.GinResult(c, http.StatusBadRequest, "请选择有效的系统版本")
+		return
+	}
 	// 检测工作区是否已存在
 	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
 	if utils.IsDir(dirPath) {
@@ -89,6 +96,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		"CPUS":   cpus,
 		"DISK":   disk,
 		"MEMORY": memory,
+		"IMAGE":  image,
 	}))
 	if err != nil {
 		utils.GinResult(c, http.StatusBadRequest, "创建工作区失败", gin.H{

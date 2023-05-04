@@ -94,6 +94,7 @@ CmdPath=$0
 # {{.CPUS}}
 # {{.DISK}}
 # {{.MEMORY}}
+# {{.IMAGE}}
 
 # 保存状态
 CREATE() {
@@ -151,7 +152,7 @@ EOF
 
 # 启动虚拟机
 CREATE "Launching"
-start="multipass launch focal --name {{.NAME}}"
+start="multipass launch {{.IMAGE}} --name {{.NAME}}"
 start="$start --cloud-init {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/init.yaml"
 start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config:~/.config"
 start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/workspace:~/workspace"
