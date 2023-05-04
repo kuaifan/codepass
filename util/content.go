@@ -97,7 +97,7 @@ CmdPath=$0
 
 # 保存状态
 CREATE() {
-	echo "\n\n[$1]"
+	echo "\n[$1]"
 	echo "$1" > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/create
 }
 
@@ -185,7 +185,7 @@ JUDGEB "Install"
 CREATE "Cloning"
 multipass exec {{.NAME}} -- sh <<-EOE
 {{.CLONE_CMD}} /workspace/{{.REPOS_NAME}}
-if [ ! -d "/workspace/{{.REPOS_NAME}}/.git/" ]; then
+if [ -d "/workspace/{{.REPOS_NAME}}/.git/" ]; then
 	echo "success" > /tmp/.code-judge
 else
 	echo "error" > /tmp/.code-judge

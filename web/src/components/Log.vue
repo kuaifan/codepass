@@ -1,6 +1,6 @@
 <template>
     <div class="log">
-        <n-log ref="nRef" :log="content" trim/>
+        <n-log ref="nRef" language="shell" :log="content" trim/>
         <div class="footer">
             <n-button :loading="loading" @click="getData">刷新</n-button>
         </div>
