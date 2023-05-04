@@ -18,9 +18,6 @@ jobs:
         with:
           node-version: '16'
 
-      - id: get-version
-        uses: battila7/get-version-action@v2
-
       - uses: actions/checkout@v3
 
       - id: build
@@ -30,12 +27,11 @@ jobs:
           npm run build
           cd ..
 
-          version=${{ steps.get-version.outputs.version-without-v }}
           go mod tidy
           go get github.com/jessevdk/go-assets-builder
           go install github.com/jessevdk/go-assets-builder@latest
           make all
-          ./build.sh $version
+          ./build.sh
 
       - name: Upload assets
         uses: softprops/action-gh-release@v1

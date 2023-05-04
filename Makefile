@@ -2,7 +2,7 @@ export PATH := $(GOPATH)/bin:$(PATH)
 export GO111MODULE=on
 LDFLAGS := -s -w
 
-os-archs=darwin:amd64 darwin:arm64 linux:amd64 linux:arm64
+os-archs=darwin:amd64 darwin:arm64 linux:386 linux:amd64 linux:arm linux:arm64 linux:mips64 linux:mips64le
 
 all: assets
 	@$(foreach n, $(os-archs),\
@@ -14,6 +14,8 @@ all: assets
 		env CGO_ENABLED=0 GOOS=$${os} GOARCH=$${arch} GOMIPS=$${gomips} go build -trimpath -ldflags "$(LDFLAGS)" -o ./release/codepass_$${target_suffix};\
 		echo "Build $${os}-$${arch} done";\
 	)
+	@cp ./release/codepass_linux_arm ./release/codepass_linux_aarch
+	@cp ./release/codepass_linux_arm64 ./release/codepass_linux_aarch64
 
 build: assets
 	# go get github.com/jessevdk/go-assets-builder

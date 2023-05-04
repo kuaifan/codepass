@@ -1,16 +1,17 @@
 #!/bin/bash
 
-VERSION="$1"
 DIR="./release"
+
+mkdir -p codepass
 
 for FILE in ${DIR}/*
 do
     if [ -e "${FILE}" ]; then
         NAME=$(basename "${FILE}")
-        mkdir -p ${NAME}
-        cp config.yaml ${NAME}
-        cp release/${NAME} ${NAME}/codepass
-        tar zcf ${NAME}_${VERSION}.tar.gz ${NAME}
-        rm -rf ${NAME}
+        cp config.yaml codepass
+        mv release/${NAME} codepass/codepass
+        tar zcf ${NAME}.tar.gz codepass
     fi
 done
+
+rm -rf codepass

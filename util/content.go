@@ -37,7 +37,7 @@ check_multipass() {
 	multipass version &> /dev/null
 	if [ $? -ne  0 ]; then
 		echo "开始安装 multipass..."
-		if [ "$(uname)" == "Darwin" ]; then
+		if [ "$(uname -s)" == "Darwin" ]; then
 			brew install --cask multipass
 		else
 			sudo snap install multipass
