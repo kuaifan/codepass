@@ -21,7 +21,7 @@ import {siteSetup} from './store'
 
 import Workspaces from "./pages/Workspaces.vue";
 import Login from "./components/Login.vue";
-import Result from "./components/result.vue";
+import Result from "./components/Result.vue";
 
 export default defineComponent({
     components: {

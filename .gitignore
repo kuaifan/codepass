@@ -1,5 +1,6 @@
 *_test.go
 /release/
+codepass_*.tar.gz
 .codepass*
 codepass
 /cmd/assets.go

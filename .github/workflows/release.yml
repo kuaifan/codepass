@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
-          go-version: 1.20
+          go-version: '1.20'
 
       - uses: actions/setup-node@v3
         with:
@@ -32,31 +32,14 @@ jobs:
 
           version=${{ steps.get-version.outputs.version-without-v }}
           go mod tidy
-          make
-          
-          mkdir codepass_darwin_amd64
-          cp config.yaml codepass_darwin_amd64
-          mv release/codepass_darwin_amd64 codepass_darwin_amd64/codepass
-          tar zcf codepass_darwin_amd64_$version.tar.gz codepass_darwin_amd64
-          
-          mkdir codepass_darwin_arm64
-          cp config.yaml codepass_darwin_arm64
-          mv release/codepass_darwin_arm64 codepass_darwin_arm64/codepass
-          tar zcf codepass_darwin_arm64_$version.tar.gz codepass_darwin_arm64
-          
-          mkdir codepass_linux_amd64
-          cp config.yaml codepass_linux_amd64
-          mv release/codepass_linux_amd64 codepass_linux_amd64/codepass
-          tar zcf codepass_linux_amd64_$version.tar.gz codepass_linux_amd64
-          
-          mkdir codepass_linux_arm64
-          cp config.yaml codepass_linux_arm64
-          mv release/codepass_linux_arm64 codepass_linux_arm64/codepass
-          tar zcf codepass_linux_arm64_$version.tar.gz codepass_linux_arm64
+          go get github.com/jessevdk/go-assets-builder
+          go install github.com/jessevdk/go-assets-builder@latest
+          make all
+          ./build.sh $version
 
       - name: Upload assets
         uses: softprops/action-gh-release@v1
         with:
           files: "codepass_*.tar.gz"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
