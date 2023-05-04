@@ -10,7 +10,7 @@ export default defineConfig({
     server: {
         proxy: {
             '/api': {
-                target: 'https://eeui.app:3443',
+                target: 'https://codepass.cc:8443',
                 changeOrigin: true,
             }
         },

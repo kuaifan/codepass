@@ -61,7 +61,7 @@
                                     <div v-if="stateLoading(item)" class="load">
                                         <Loading/>
                                     </div>
-                                    <div class="text">{{ stateText(item) }}</div>
+                                    <div class="text" :style="stateStyle(item)">{{ stateText(item) }}</div>
                                 </div>
                                 <n-dropdown
                                         trigger="click"
@@ -261,6 +261,26 @@ export default defineComponent({
             return ['Success', ''].indexOf(item.create) !== -1
                 && ['Failed', ''].indexOf(item.state) !== -1
         }
+        const stateStyle = (item) => {
+            const state = stateText(item)
+            switch (state) {
+                case 'Success':
+                    return {
+                        color: 'rgb(82,196,26)'
+                    }
+                case 'Failed':
+                    return {
+                        color: 'rgb(248,113,113)'
+                    }
+                case 'Unknown':
+                case 'Error':
+                    return {
+                        color: 'rgb(252,211,77)'
+                    }
+                default:
+                    return {}
+            }
+        }
         const stateText = (item) => {
             if (item.create === 'Success') {
                 return item.state || 'Unknown'
@@ -317,6 +337,7 @@ export default defineComponent({
             addIcon,
             createDone,
             stateLoading,
+            stateStyle,
             stateText,
             onState,
             onLoad
