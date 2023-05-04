@@ -62,9 +62,9 @@
                                             <n-button
                                                 text
                                                 tag="a"
-                                                :href="item.repos_url"
+                                                :href="item['repos_url']"
                                                 target="_blank">
-                                                {{ item.repos_url }}
+                                                {{ item['repos_url'] }}
                                             </n-button>
                                         </li>
                                     </ul>

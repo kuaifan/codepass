@@ -115,7 +115,7 @@ JUDGEA() {
 }
 JUDGEB() {
 	local desc="$1"
-	local state=$(multipass exec {{.NAME}} -- sudo sh -c 'cat /tmp/.code-judge')
+	local state=$(multipass exec {{.NAME}} -- sudo sh -c 'cat /tmp/.code-judge && rm -f /tmp/.code-judge')
 	if [ "$state" = "success" ]; then
 		echo "$desc 完成"
 	else
