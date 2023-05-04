@@ -97,8 +97,32 @@ CmdPath=$0
 
 # 保存状态
 CREATE() {
-	echo "$1"
+	echo "\n\n[$1]"
 	echo "$1" > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/create
+}
+
+# 判断状态
+JUDGEA() {
+	if [ 0 -eq $? ]; then
+		echo "$1 完成"
+	else
+		echo "$1 失败"
+		CREATE "Failed"
+		rm -f $CmdPath
+		exit 1
+	fi
+}
+JUDGEB() {
+	local desc="$1"
+	local state=$(multipass exec {{.NAME}} -- sh -c 'cat /tmp/.code-judge')
+	if [ "$state" = "success" ]; then
+		echo "$desc 完成"
+	else
+		echo "$desc 失败"
+		CREATE "Failed"
+		rm -f $CmdPath
+		exit 1
+	fi
 }
 
 # 准备工作
@@ -111,7 +135,7 @@ repos_owner: {{.REPOS_OWNER}}
 repos_name: {{.REPOS_NAME}}
 repos_url: {{.REPOS_URL}}
 EOF
-cat > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/run.yaml <<-EOF
+cat > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/init.yaml <<-EOF
 runcmd:
   - curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
   - sudo apt-get install -y nodejs
@@ -128,33 +152,46 @@ EOF
 # 启动虚拟机
 CREATE "Launching"
 start="multipass launch focal --name {{.NAME}}"
-start="$start --cloud-init {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/run.yaml"
+start="$start --cloud-init {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/init.yaml"
 start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config:~/.config"
 start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/workspace:~/workspace"
 [ -n "{{.CPUS}}" ] && start="$start --cpus {{.CPUS}}"
 [ -n "{{.DISK}}" ] && start="$start --disk {{.DISK}}"
 [ -n "{{.MEMORY}}" ] && start="$start --memory {{.MEMORY}}"
 $start
+multipass info {{.NAME}} &> /dev/null
+JUDGEA "Launch"
 
 # 安装 code-server
 CREATE "Installing"
-multipass exec {{.NAME}} -- sh -c 'curl -fsSL https://code-server.dev/install.sh | sh'
-
-# 优化 code-server 页面资源
-multipass exec {{.NAME}} -- sudo sh <<-EOE
-echo ".card-box > .header {display:none}" >> /usr/lib/code-server/src/browser/pages/login.css
-rm -f /usr/lib/code-server/src/browser/media/pwa-icon-192.png
-rm -f /usr/lib/code-server/src/browser/media/pwa-icon-512.png
-rm -f /usr/lib/code-server/src/browser/media/favicon-dark-support.svg
-rm -f /usr/lib/code-server/src/browser/media/favicon.ico
+multipass exec {{.NAME}} -- sh <<-EOE
+curl -fsSL https://code-server.dev/install.sh | sh
+sudo echo ".card-box > .header {display:none}" >> /usr/lib/code-server/src/browser/pages/login.css
+sudo rm -f /usr/lib/code-server/src/browser/media/pwa-icon-192.png
+sudo rm -f /usr/lib/code-server/src/browser/media/pwa-icon-512.png
+sudo rm -f /usr/lib/code-server/src/browser/media/favicon-dark-support.svg
+sudo rm -f /usr/lib/code-server/src/browser/media/favicon.ico
+sudo ln -s \${HOME}/workspace /workspace
+code-server --version &> /dev/null
+if [ 0 -eq \$? ]; then
+	echo "success" > /tmp/.code-judge
+else
+	echo "error" > /tmp/.code-judge
+fi
 EOE
+JUDGEB "Install"
 
 # Cloning
 CREATE "Cloning"
 multipass exec {{.NAME}} -- sh <<-EOE
-sudo ln -s \${HOME}/workspace /workspace
-{{.CLONE_CMD}}
+{{.CLONE_CMD}} /workspace/{{.REPOS_NAME}}
+if [ ! -d "/workspace/{{.REPOS_NAME}}/.git/" ]; then
+	echo "success" > /tmp/.code-judge
+else
+	echo "error" > /tmp/.code-judge
+fi
 EOE
+JUDGEB "Clone"
 
 # 启动 code-server
 CREATE "Starting"
@@ -164,17 +201,12 @@ systemctl set-environment VSCODE_PROXY_URI={{.PROXY_URI}}
 systemctl set-environment DEFAULT_WORKSPACE=/workspace/{{.REPOS_NAME}}
 systemctl enable --now code-server@ubuntu
 if [ 0 -eq \$? ]; then
-	echo "success" > /tmp/.code-server
+	echo "success" > /tmp/.code-judge
 else
-	echo "error" > /tmp/.code-server
+	echo "error" > /tmp/.code-judge
 fi
 EOE
-server=$(multipass exec {{.NAME}} -- sh -c 'cat /tmp/.code-server')
-if [ "$server" != "success" ]; then
-	CREATE "Failed"
-	rm -f $CmdPath
-	exit 1
-fi
+JUDGEB "Start"
 
 # 输出成功
 CREATE "Success"
