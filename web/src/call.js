@@ -1,6 +1,12 @@
 import axios from 'axios'
 import utils from "./utils.js";
 
+// 输出结果
+const handleResult = (result) => {
+    utils.SetCookie('result_code', result.code)
+    utils.SetCookie('result_msg', result.msg)
+    return result
+}
 
 // 创建一个 axios 实例
 const call = axios.create({
@@ -39,23 +45,25 @@ call.interceptors.response.use(
         const dataAxios = response.data
         //
         if (!utils.isJson(dataAxios)) {
-            return Promise.reject({code: 500, msg: "返回数据格式错误"})
+            return Promise.reject(handleResult({code: 500, msg: "返回数据格式错误", data: dataAxios}))
         }
         if (dataAxios.code !== 200) {
-            if (dataAxios.code === 301) {
-                window.location.href = dataAxios.msg
-            } else if (dataAxios.code === 401) {
-                window.location.reload()
-            }
-            return Promise.reject(dataAxios)
+            setTimeout(() => {
+                if (dataAxios.code === 301) {
+                    window.location.href = dataAxios.msg
+                } else if (dataAxios.code === 401) {
+                    window.location.reload()
+                }
+            })
+            return Promise.reject(handleResult(dataAxios))
         }
-        return dataAxios
+        return handleResult(dataAxios)
     },
     function (error) {
         // 超出 2xx 范围的状态码都会触发该函数。
         // 对响应错误做点什么
         // console.log(error)
-        return Promise.reject({ret: 500, msg: "请求失败", data: error})
+        return Promise.reject(handleResult({code: 500, msg: "请求失败", data: error}))
     }
 )
 

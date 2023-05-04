@@ -25,13 +25,12 @@
 </style>
 <script lang="ts">
 import {defineComponent, ref} from 'vue'
-import Cookies from 'js-cookie'
 import utils from '../utils.js'
 
 export default defineComponent({
     setup() {
-        let resultCode = Cookies.get('result_code')
-        let resultMsg = `${Cookies.get('result_msg') || ''}`
+        let resultCode = utils.GetCookie('result_code')
+        let resultMsg = utils.GetCookie('result_msg', '')
         if (utils.parseInt(resultCode) === 400) {
             resultCode = "warning"
         }
@@ -40,8 +39,8 @@ export default defineComponent({
         const title = ref(resultMsg.length <= 10 ? resultMsg : '')
         const desc = ref(resultMsg.length > 10 ? resultMsg : '')
         const goHome = () => {
-            Cookies.remove('result_code')
-            Cookies.remove('result_msg')
+            utils.RemoveCookie('result_code')
+            utils.RemoveCookie('result_msg')
             window.location.href = ""
         }
 

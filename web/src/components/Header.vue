@@ -67,9 +67,9 @@
 <script lang="ts">
 import {defineComponent, computed, h, ref, VNodeChild} from "vue";
 import {useMessage} from 'naive-ui'
-import Cookies from "js-cookie";
 import {EllipsisVertical} from "@vicons/ionicons5";
 import {useThemeName, useUserInfo, loadUserInfo} from '../store'
+import utils from "../utils.js";
 
 export default defineComponent({
     components: {EllipsisVertical},
@@ -109,7 +109,7 @@ export default defineComponent({
         }
         const handleMenuSelect = (key: string) => {
             if (key === 'logout') {
-                Cookies.remove('result_token')
+                utils.RemoveCookie('result_token')
                 window.location.href = "/oauth/logout"
             } else {
                 message.warning('未知操作')

@@ -2,7 +2,6 @@ import {computed, watch, ref} from 'vue'
 import {darkTheme, useOsTheme} from 'naive-ui'
 import utils from "../utils.js";
 import call from "../call.js";
-import Cookies from "js-cookie";
 
 const userInfoRef = ref({name: '', avatar_url: ''})
 const themeNameRef = ref('light')
@@ -38,7 +37,7 @@ export function loadUserInfo() {
 
 export function siteSetup() {
     return {
-        resultCode: utils.parseInt(Cookies.get('result_code')),
+        resultCode: utils.parseInt(utils.GetCookie('result_code')),
         themeName: themeNameRef,
         theme: themeRef,
     }

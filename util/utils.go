@@ -335,14 +335,20 @@ func GinInput(c *gin.Context, key string) string {
 	return strings.TrimSpace(c.Query(key))
 }
 
-// GinHost Gin获取Request主机地址（不含端口）
-func GinHost(c *gin.Context) string {
-	host := c.Request.Host
-	if strings.Contains(host, ":") {
-		parts := strings.Split(host, ":")
-		return parts[0]
-	}
-	return host
+// GinGetCookie Gin获取Cookie
+func GinGetCookie(c *gin.Context, name string) string {
+	value, _ := c.Cookie(name)
+	return value
+}
+
+// GinSetCookie Gin设置Cookie
+func GinSetCookie(c *gin.Context, name, value string) {
+	c.SetCookie(name, value, 0, "/", "", false, false)
+}
+
+// GinRemoveCookie Gin删除Cookie
+func GinRemoveCookie(c *gin.Context, name string) {
+	c.SetCookie(name, "", -1, "/", "", false, false)
 }
 
 // GinResult 返回结果
@@ -356,8 +362,8 @@ func GinResult(c *gin.Context, code int, content string, values ...any) {
 		data = values
 	}
 	//
-	c.SetCookie("result_code", fmt.Sprintf("%d", code), 0, "/", GinHost(c), false, false)
-	c.SetCookie("result_msg", content, 0, "/", GinHost(c), false, false)
+	GinSetCookie(c, "result_code", fmt.Sprintf("%d", code))
+	GinSetCookie(c, "result_msg", content)
 	//
 	if strings.Contains(c.GetHeader("Accept"), "application/json") {
 		// 接口返回

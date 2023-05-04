@@ -12,7 +12,7 @@
                         <logo-github />
                     </n-icon>
                 </template>
-                {{label(item.label)}}
+                {{item.label}}
             </n-button>
         </div>
         <div class="policy">登录即表示您同意我们的服务条款和隐私政策。</div>
@@ -49,21 +49,14 @@
 import {defineComponent, ref} from "vue";
 import {LogoGithub, AddCircleOutline} from "@vicons/ionicons5";
 import utils from "../utils.js";
-import Cookies from "js-cookie";
 
 export default defineComponent({
     components: {
         LogoGithub,
         AddCircleOutline
     },
-    methods: {
-        label(value) {
-            if (!value) return ''
-            return value.replace(/\+/g, ' ')
-        }
-    },
     setup() {
-        const items = ref(utils.jsonParse(Cookies.get('result_msg')))
+        const items = ref(utils.jsonParse(utils.GetCookie('result_msg')))
         if (!utils.isArray(items.value)) {
             items.value = []
         }

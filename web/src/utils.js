@@ -1,4 +1,5 @@
 import localforage from "localforage";
+import Cookies from "js-cookie";
 
 localforage.config({name: 'web', storeName: 'common'});
 
@@ -247,6 +248,42 @@ const utils = {
             return ""
         }
         return utils.rightDelete(url.replace("?&", "?"), '?');
+    },
+
+    /**
+     * =============================================================================
+     * ********************************   cookie   *********************************
+     * =============================================================================
+     */
+
+    /**
+     * 获取cookie
+     * @param name
+     * @param defaultVal
+     * @returns {string}
+     * @constructor
+     */
+    GetCookie(name, defaultVal = "") {
+        return decodeURIComponent(Cookies.get(name)) || defaultVal
+    },
+
+    /**
+     * 设置cookie
+     * @param name
+     * @param value
+     * @constructor
+     */
+    SetCookie(name, value) {
+        Cookies.set(name, encodeURIComponent(value))
+    },
+
+    /**
+     * 删除cookie
+     * @param name
+     * @constructor
+     */
+    RemoveCookie(name) {
+        Cookies.remove(name)
     },
 
     /**

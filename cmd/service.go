@@ -93,7 +93,7 @@ var serviceCmd = &cobra.Command{
 		router.SetHTMLTemplate(templates)
 		//
 		router.Any("/*path", func(c *gin.Context) {
-			urlHost := utils.GinHost(c)
+			urlHost := c.Request.Host
 			regFormat := fmt.Sprintf("^((\\d+)-)*(([^\\/\\.]+)-([^\\/\\.]+)-([^\\/\\.]+)).%s", app.ServiceConf.Host)
 			if utils.Test(urlHost, regFormat) {
 				// 工作区实例
