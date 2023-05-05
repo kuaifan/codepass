@@ -18,8 +18,6 @@ all: assets
 	@cp ./release/codepass_linux_arm64 ./release/codepass_linux_aarch64
 
 build: assets
-	# go get github.com/jessevdk/go-assets-builder
-    # go install github.com/jessevdk/go-assets-builder@latest
 	env CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o .
 
 install: build
@@ -34,3 +32,8 @@ assets:
 clean:
 	@rm -f ./codepass
 	@rm -rf ./release
+
+
+# 提示 go-assets-builder: No such file or directory 时解決辦法
+# go get github.com/jessevdk/go-assets-builder
+# go install github.com/jessevdk/go-assets-builder@latest

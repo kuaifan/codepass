@@ -245,13 +245,13 @@ func InArray(item string, items []string) bool {
 
 // Cmd 执行命令
 func Cmd(arg ...string) (string, error) {
-	output, err := exec.Command("/bin/sh", arg...).CombinedOutput()
+	output, err := exec.Command("/bin/bash", arg...).CombinedOutput()
 	return string(output), err
 }
 
-// Bash 执行命令
-func Bash(arg ...string) (string, error) {
-	output, err := exec.Command("/bin/bash", arg...).CombinedOutput()
+// CmdSh 执行命令
+func CmdSh(arg ...string) (string, error) {
+	output, err := exec.Command("/bin/sh", arg...).CombinedOutput()
 	return string(output), err
 }
 

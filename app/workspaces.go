@@ -107,7 +107,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	// 执行创建脚本
 	go func() {
 		_, _ = utils.Cmd("-c", fmt.Sprintf("chmod +x %s", cmdFile))
-		_, _ = utils.Cmd("-c", fmt.Sprintf("/bin/sh %s > %s 2>&1", cmdFile, logFile))
+		_, _ = utils.Cmd("-c", fmt.Sprintf("/bin/bash %s > %s 2>&1", cmdFile, logFile))
 		UpdateProxy()
 	}()
 	//

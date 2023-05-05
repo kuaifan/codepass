@@ -28,7 +28,7 @@ var updateCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		_, _ = utils.Cmd("-c", fmt.Sprintf("chmod +x %s", cmdFile))
-		cmdString := exec.Command("/bin/sh", cmdFile)
+		cmdString := exec.Command("/bin/bash", cmdFile)
 		utils.PrintCmdOutput(cmdString)
 	},
 }
