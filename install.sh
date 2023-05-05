@@ -12,12 +12,12 @@ Font="\033[0m"
 
 # 输出 OK
 OK() {
-	echo -e "${Green}[OK]${Font} ${GreenBG}$1${Font}"
+    echo -e "${Green}[OK]${Font} ${GreenBG}$1${Font}"
 }
 
 # 输出 ERR
 ERR() {
-	echo -e "${Red}[ERR]${Font} ${RedBG}$1${Font}"
+    echo -e "${Red}[ERR]${Font} ${RedBG}$1${Font}"
 }
 
 # 判断输出
@@ -57,64 +57,87 @@ if [[ -z ${VERSION} ]]; then
 fi
 
 # 输入必须信息
-while [ -z "$DOMAIN" ]; do
-    read -rp "请输入你的主域名(例如: abc.com):" DOMAIN
-done
 while [ -z "$CLIENT_ID" ]; do
-    read -rp "请输入 GitHub Client ID:" CLIENT_ID
+    read -rp "请输入 GitHub Client ID: " CLIENT_ID
 done
 while [ -z "$CLIENT_SECRET" ]; do
-    read -rp "请输入 GitHub Client secrets:" CLIENT_SECRET
+    read -rp "请输入 GitHub Client secrets: " CLIENT_SECRET
 done
-
-# 检测域名
-DOIP=$(ping "${DOMAIN}" -c 1 | sed '1{s/[^(]*(//;s/).*//;q}')
-OK "正在获取 公网ip 信息，请耐心等待"
-LOIP=$(curl https://api-ipv4.ip.sb/ip)
-echo -e "域名dns解析IP：${DOIP}"
-echo -e "本机IP: ${LOIP}"
-sleep 2
-if [[ $(echo "${LOIP}" | tr '.' '+' | bc) -eq $(echo "${DOIP}" | tr '.' '+' | bc) ]]; then
-    OK "域名DNS解析IP 与 本机IP 匹配"
-    sleep 2
-else
-    ERR "域名DNS解析IP 与 本机IP 不匹配，是否继续安装？（Y/n）"
-    read -r CONTINUEIN
-    [[ -z ${CONTINUEIN} ]] && CONTINUEIN="Y"
-    case $CONTINUEIN in
-    [yY][eE][sS] | [yY])
-        echo -e "${GreenBG}继续安装${Font}"
-        sleep 2
-        ;;
-    *)
-        echo -e "${RedBG}安装终止${Font}"
-        exit 2
-        ;;
-    esac
-fi
-
-# 安装证书
-curl https://get.acme.sh | sh
-JUDGE "安装 SSL 证书生成脚本"
-alias acme.sh=~/.acme.sh/acme.sh
+while [ -z "$DOMAIN" ]; do
+    read -rp "请输入 您的域名(例如: abc.com): " DOMAIN
+done
+read -rp "请输入 您的邮箱(用于申请SSL证书，留空手动填写): " EMAIL
 
 # 生成证书目录
 SSLPATH=$HOMEDIR/ssl/$DOMAIN
 mkdir -p $SSLPATH
 
-# 申请证书
-acme.sh --register-account -m admin@admin.com
-acme.sh --issue -d $DOMAIN -d *.$DOMAIN --standalone
-acme.sh --installcert -d $DOMAIN -d *.$DOMAIN --key-file $SSLPATH/site.key --fullchain-file $SSLPATH/site.crt
-if [ ! -f $SSLPATH/site.key ]; then
-    ERR "证书申请失败"
-    exit 1
+# 判定是否手动填写SSL证书
+if [[ -z ${EMAIL} ]]; then
+    # 输入SSL证书路径
+    while [ -z "$KEYPATH" ]; do
+        read -rp "请输入 SSL密钥(KEY) 文件路径: " KEYPATH
+        if [ ! -f $KEYPATH ]; then
+            ERR "SSL密钥(KEY) 文件不存在，请重新输入"
+            KEYPATH=""
+        fi
+    done
+    while [ -z "$CRTPATH" ]; do
+        read -rp "请输入 SSL证书(PEM格式) 文件路径: " CRTPATH
+        if [ ! -f $CRTPATH ]; then
+            ERR "SSL证书(PEM格式) 文件不存在，请重新输入"
+            CRTPATH=""
+        fi
+    done
+    # 复制证书
+    cp $KEYPATH $SSLPATH/site.key
+    cp $CRTPATH $SSLPATH/site.crt
+else
+    # 检测域名自动申请证书
+    DOIP=$(ping "${DOMAIN}" -c 1 | sed '1{s/[^(]*(//;s/).*//;q}')
+    OK "正在获取 公网ip 信息，请耐心等待"
+    LOIP=$(curl -sSL4 ip.sb)
+    echo -e "域名dns解析IP：${DOIP}"
+    echo -e "本机IP: ${LOIP}"
+    sleep 2
+    if [ "$LOIP" = "$DOIP" ]; then
+        OK "域名DNS解析IP 与 本机IP 匹配"
+        sleep 2
+    else
+        ERR "域名DNS解析IP 与 本机IP 不匹配，是否继续安装？（Y/n）"
+        read -r CONTINUEIN
+        [[ -z ${CONTINUEIN} ]] && CONTINUEIN="Y"
+        case $CONTINUEIN in
+        [yY][eE][sS] | [yY])
+            echo -e "${GreenBG}继续安装${Font}"
+            sleep 2
+            ;;
+        *)
+            echo -e "${RedBG}安装终止${Font}"
+            exit 2
+            ;;
+        esac
+    fi
+
+    # 安装证书服务
+    curl https://get.acme.sh | sh
+    JUDGE "安装 SSL 证书生成脚本"
+    alias acme.sh=~/.acme.sh/acme.sh
+
+    # 自动申请证书
+    acme.sh --register-account -m $EMAIL
+    acme.sh --issue -d $DOMAIN -d *.$DOMAIN --standalone
+    acme.sh --installcert -d $DOMAIN -d *.$DOMAIN --key-file $SSLPATH/site.key --fullchain-file $SSLPATH/site.crt
+    if [ ! -f $SSLPATH/site.key ]; then
+        ERR "证书申请失败"
+        exit 1
+    fi
 fi
 
 # 安装 codepass
 PKGPATH=$HOMEDIR/pkg
 mkdir -p $PKGPATH
-curl -s -L "https://github.com/kuaifan/codepass/releases/download/${VERSION}/codepass_${PLATFORM}_${FRAMEWORK}.tar.gz" -o $PKGPATH/package.tar.gz
+curl -L "https://github.com/kuaifan/codepass/releases/download/${VERSION}/codepass_${PLATFORM}_${FRAMEWORK}.tar.gz" -o $PKGPATH/package.tar.gz
 tar -zxf $PKGPATH/package.tar.gz -C $PKGPATH
 if [ ! -f $PKGPATH/codepass/codepass ]; then
     ERR "codepass 安装失败"
@@ -137,8 +160,9 @@ $HOMEDIR/codepass config \
 echo ""
 echo ""
 OK "[codepass 程序安装完成]"
-OK "执行程序: $HOMEDIR/codepass"
-OK "配置文件: $HOMEDIR/config.yaml"
+echo "执行程序: $HOMEDIR/codepass"
+echo "配置文件: $HOMEDIR/config.yaml"
 echo ""
-OK "1.安装环境: $HOMEDIR/codepass install"
-OK "2.启动服务: $HOMEDIR/codepass service --conf $HOMEDIR/config.yaml"
+echo "接下来，请按顺序执行一下命令："
+echo -e "1.安装环境: ${GreenBG}$HOMEDIR/codepass install${Font}"
+echo -e "2.启动服务: ${GreenBG}$HOMEDIR/codepass service --conf $HOMEDIR/config.yaml${Font}"
