@@ -84,6 +84,7 @@ var serviceCmd = &cobra.Command{
 		app.UpdateProxy()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		gin.SetMode(gin.ReleaseMode)
 		router := gin.Default()
 		templates, err := loadTemplate()
 		if err != nil {
@@ -173,7 +174,7 @@ func tlsHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		secureMiddleware := secure.New(secure.Options{
 			SSLRedirect: true,
-			SSLHost:     fmt.Sprintf("%s:%s", app.ServiceConf.Host, app.ServiceConf.Port),
+			SSLHost:     fmt.Sprintf(":%s", app.ServiceConf.Port),
 		})
 		err := secureMiddleware.Process(c.Writer, c.Request)
 		if err != nil {
