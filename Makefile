@@ -16,6 +16,7 @@ all: assets
 	)
 	@cp ./release/codepass_linux_arm ./release/codepass_linux_aarch
 	@cp ./release/codepass_linux_arm64 ./release/codepass_linux_aarch64
+	@cp ./release/codepass_linux_amd64 ./release/codepass_linux_x86_64
 
 build: assets
 	env CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o .
