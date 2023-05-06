@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // WorkspacesCreate 创建工作区（post）
@@ -97,6 +98,8 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		"DISK":   disk,
 		"MEMORY": memory,
 		"IMAGE":  image,
+
+		"CREATED_AT": utils.FormatYmdHis(time.Now()),
 	}))
 	if err != nil {
 		utils.GinResult(c, http.StatusBadRequest, "创建工作区失败", gin.H{
@@ -149,7 +152,12 @@ func (model *ServiceModel) WorkspacesLog(c *gin.Context) {
 
 // WorkspacesList 获取工作区列表
 func (model *ServiceModel) WorkspacesList(c *gin.Context) {
-	list := workspacesList()
+	var list []*instanceModel
+	for _, entry := range workspacesList() {
+		if entry.OwnerName == ServiceConf.GithubUserInfo.Login {
+			list = append(list, entry)
+		}
+	}
 	if list == nil {
 		utils.GinResult(c, http.StatusBadRequest, "暂无数据")
 		return

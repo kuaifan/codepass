@@ -108,6 +108,8 @@ CmdPath=$0
 # {{.MEMORY}}
 # {{.IMAGE}}
 
+# {{.CREATED_AT}}
+
 # 保存状态
 CREATE() {
 	echo ""
@@ -148,6 +150,7 @@ owner_name: {{.OWNER_NAME}}
 repos_owner: {{.REPOS_OWNER}}
 repos_name: {{.REPOS_NAME}}
 repos_url: {{.REPOS_URL}}
+created_at: {{.CREATED_AT}}
 EOF
 cat > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/init.yaml <<-EOF
 runcmd:

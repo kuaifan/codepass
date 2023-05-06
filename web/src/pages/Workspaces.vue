@@ -6,7 +6,7 @@
 
         <!-- 搜索 -->
         <div class="search">
-            <div class="wrapper" :class="{loading: loadIng}">
+            <div class="wrapper" :class="{loading: loadIng && loadShow}">
                 <div class="search-box">
                     <div class="input-box">
                         <n-input round v-model:value="searchKey" placeholder="">
@@ -14,8 +14,8 @@
                                 <n-icon :component="SearchOutline"/>
                             </template>
                         </n-input>
-                        <div class="reload" @click="onLoad(true)">
-                            <Loading v-if="loadIng"/>
+                        <div class="reload" @click="onLoad(true, true)">
+                            <Loading v-if="loadIng && loadShow"/>
                             <n-icon v-else>
                                 <reload/>
                             </n-icon>
@@ -160,6 +160,7 @@ export default defineComponent({
         const logModal = ref(false);
         const logName = ref("");
         const loadIng = ref(false);
+        const loadShow = ref(false);
         const items = ref([])
         const searchKey = ref("");
         const searchList = computed(() => {
@@ -259,7 +260,7 @@ export default defineComponent({
                                 items.value = items.value.filter(i => i.name !== item.name)
                             }).catch(({msg}) => {
                                 message.error(msg)
-                                onLoad(false)
+                                onLoad(false, true)
                             }).finally(resolve)
                         })
                     }
@@ -271,7 +272,7 @@ export default defineComponent({
         }
         const createDone = () => {
             createModal.value = false
-            onLoad(true)
+            onLoad(true, true)
         }
         const stateRunning = (item) => {
             const state = stateText(item)
@@ -313,11 +314,15 @@ export default defineComponent({
                 operationSelect('log', item)
             }
         }
-        const onLoad = (tip) => {
+        const onLoad = (tip, showLoad) => {
             if (loadIng.value) {
+                if (showLoad === true) {
+                    loadShow.value = tip
+                }
                 return
             }
             loadIng.value = true
+            loadShow.value = showLoad
             //
             call({
                 method: "get",
@@ -335,8 +340,8 @@ export default defineComponent({
             })
         }
 
-        onLoad(false)
-        const loadInter = setInterval(_ => onLoad(false), 1000 * 30)
+        onLoad(false, true)
+        const loadInter = setInterval(_ => onLoad(false, false), 1000 * 30)
         onBeforeUnmount(() => {
             clearInterval(loadInter)
         })
@@ -348,6 +353,7 @@ export default defineComponent({
             logModal,
             logName,
             loadIng,
+            loadShow,
             searchKey,
             searchList,
             operationMenu,

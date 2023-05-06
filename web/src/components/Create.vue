@@ -47,7 +47,7 @@
                     <n-button round quaternary type="default" @click="advanced=!advanced">
                         {{advancedText}}
                     </n-button>
-                    <n-button round type="primary" @click="handleSubmit">
+                    <n-button :loading="loadIng" round type="primary" @click="handleSubmit">
                         创建
                     </n-button>
                 </div>
@@ -61,7 +61,7 @@ import {computed, defineComponent, ref} from 'vue'
 import {
     FormInst,
     FormItemRule,
-    FormRules, useMessage
+    FormRules, useDialog, useMessage
 } from 'naive-ui'
 import call from "../call.js";
 import utils from "../utils.js";
@@ -75,11 +75,9 @@ interface ModelType {
 }
 
 export default defineComponent({
-    emits: {
-        onCreate: () => true,
-    },
     setup(props, {emit}) {
         const message = useMessage()
+        const dialog = useDialog()
         const advanced = ref<boolean>(false)
         const loadIng = ref<boolean>(false)
         const formRef = ref<FormInst | null>(null)
@@ -227,7 +225,11 @@ export default defineComponent({
                     message.success(msg);
                     emit('createDone')
                 }).catch(({msg}) => {
-                    message.error(msg);
+                    dialog.error({
+                        title: '创建失败',
+                        content: msg,
+                        positiveText: '确定',
+                    })
                 }).finally(() => {
                     loadIng.value = false
                 })

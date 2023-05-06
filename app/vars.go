@@ -51,6 +51,7 @@ type instanceModel struct {
 	ReposOwner string `json:"repos_owner"`
 	ReposName  string `json:"repos_name"`
 	ReposUrl   string `json:"repos_url"`
+	CreatedAt  string `json:"created_at"`
 
 	Domain string `json:"domain"`
 	Url    string `json:"url"`
@@ -154,6 +155,7 @@ func instanceBase(entry *instanceModel) *instanceModel {
 	entry.ReposOwner = viper.GetString("repos_owner")
 	entry.ReposName = viper.GetString("repos_name")
 	entry.ReposUrl = viper.GetString("repos_url")
+	entry.CreatedAt = viper.GetString("created_at")
 	if len(entry.Ipv4) > 0 {
 		entry.Ip = entry.Ipv4[0]
 	}
