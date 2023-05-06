@@ -87,7 +87,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		"PROXY_DOMAIN": proxyDomain,
 		"PROXY_URI":    proxyUri,
 
-		"OWNER_NAME":  ServiceConf.GithubUserInfo.Name,
+		"OWNER_NAME":  ServiceConf.GithubUserInfo.Login,
 		"REPOS_OWNER": reposOwner,
 		"REPOS_NAME":  reposName,
 		"REPOS_URL":   repos,

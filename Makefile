@@ -25,7 +25,7 @@ install: build
 	./codepass install
 
 service: build
-	./codepass service
+	./codepass service --mode debug
 
 assets:
 	go-assets-builder web/dist -o cmd/assets.go -p cmd

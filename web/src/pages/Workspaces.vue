@@ -485,6 +485,7 @@ export default defineComponent({
                             font-weight: normal;
                             > a {
                                 opacity: 0.5;
+                                user-select: auto;
                                 &:hover {
                                     opacity: 1;
                                 }

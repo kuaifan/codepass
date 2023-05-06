@@ -84,7 +84,13 @@ var serviceCmd = &cobra.Command{
 		app.UpdateProxy()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		gin.SetMode(gin.ReleaseMode)
+		if app.ServiceConf.Mode == "debug" {
+			gin.SetMode(gin.DebugMode)
+		} else if app.ServiceConf.Mode == "test" {
+			gin.SetMode(gin.TestMode)
+		} else {
+			gin.SetMode(gin.ReleaseMode)
+		}
 		router := gin.Default()
 		templates, err := loadTemplate()
 		if err != nil {
@@ -187,4 +193,5 @@ func tlsHandler() gin.HandlerFunc {
 func init() {
 	rootCmd.AddCommand(serviceCmd)
 	serviceCmd.Flags().StringVar(&app.ServiceConf.Conf, "conf", "", "配置文件路径")
+	serviceCmd.Flags().StringVar(&app.ServiceConf.Mode, "mode", "release", "运行模式：debug/test/release")
 }

@@ -45,7 +45,7 @@
             <n-col :span="24">
                 <div class="button-group">
                     <n-button round quaternary type="default" @click="advanced=!advanced">
-                        高级
+                        {{advancedText}}
                     </n-button>
                     <n-button round type="primary" @click="handleSubmit">
                         创建
@@ -112,11 +112,30 @@ export default defineComponent({
                 }
             })
         })
-        const imageList = ["18.04", "20.04", "22.04", "22.10"].map(item => {
+        const imageList = ["18.04", "20.04", "22.04"].map(item => {
             return {
                 label: `Ubuntu ${item}`,
                 value: item
             }
+        })
+        const advancedText = computed(() => {
+            if (advanced.value) {
+                return "收起"
+            }
+            let str = ""
+            if (formData.value.cpus) {
+                str += `${formData.value.cpus}核`
+            }
+            if (formData.value.memory) {
+                str += `${formData.value.memory}GB`
+            }
+            if (formData.value.disk) {
+                str += `，${formData.value.disk}GB`
+            }
+            if (formData.value.image) {
+                str += `，${formData.value.image}`
+            }
+            return str
         })
 
         const formRules: FormRules = {
@@ -216,6 +235,7 @@ export default defineComponent({
         }
         return {
             advanced,
+            advancedText,
             loadIng,
             formRef,
             formData,

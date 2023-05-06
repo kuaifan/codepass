@@ -9,7 +9,7 @@ import (
 )
 
 func (model *ServiceModel) UserRepositories(c *gin.Context) {
-	url := fmt.Sprintf("https://api.github.com/users/%s/repos", ServiceConf.GithubUserInfo.Name)
+	url := fmt.Sprintf("https://api.github.com/users/%s/repos", ServiceConf.GithubUserInfo.Login)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		utils.GinResult(c, http.StatusBadRequest, "无法创建请求", gin.H{
@@ -18,7 +18,7 @@ func (model *ServiceModel) UserRepositories(c *gin.Context) {
 		return
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("Authorization", fmt.Sprintf("%s <%s>", ServiceConf.GithubUserInfo.Name, ServiceConf.GithubUserInfo.AccessToken))
+	req.Header.Set("Authorization", fmt.Sprintf("%s <%s>", ServiceConf.GithubUserInfo.Login, ServiceConf.GithubUserInfo.AccessToken))
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 
 	var client = http.Client{}

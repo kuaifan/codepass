@@ -110,7 +110,8 @@ CmdPath=$0
 
 # 保存状态
 CREATE() {
-	echo "\n[$1]"
+	echo ""
+	echo "[$1]"
 	echo "$1" > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/create
 }
 

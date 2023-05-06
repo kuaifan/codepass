@@ -12,6 +12,7 @@ import (
 )
 
 type ServiceModel struct {
+	Mode               string
 	Conf               string
 	Host               string
 	Port               string
@@ -63,6 +64,7 @@ type githubTokenModel struct {
 
 type githubUserModel struct {
 	AccessToken string    `json:"access_token"`
+	Login       string    `json:"login"`
 	ID          int       `json:"id"`
 	AvatarURL   string    `json:"avatar_url"`
 	Type        string    `json:"type"`
