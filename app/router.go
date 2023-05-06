@@ -123,6 +123,10 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 		ServiceConf.WorkspacesModify(c)
 		return
 	}
+	if strings.HasPrefix(urlPath, "/api/workspaces/operation") {
+		ServiceConf.WorkspacesOperation(c)
+		return
+	}
 	if strings.HasPrefix(urlPath, "/api/workspaces/delete") {
 		ServiceConf.WorkspacesDelete(c)
 		return

@@ -275,6 +275,34 @@ func (model *ServiceModel) WorkspacesModify(c *gin.Context) {
 	})
 }
 
+// WorkspacesOperation 操作工作区（启动、停止、重启）
+func (model *ServiceModel) WorkspacesOperation(c *gin.Context) {
+	type_ := c.Query("type")
+	name := c.Query("name")
+	if type_ != "start" && type_ != "stop" && type_ != "restart" {
+		utils.GinResult(c, http.StatusBadRequest, "操作类型错误")
+		return
+	}
+	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
+	if !utils.IsDir(dirPath) {
+		utils.GinResult(c, http.StatusBadRequest, "工作区不存在")
+		return
+	}
+	result, err := utils.Cmd("-c", fmt.Sprintf("multipass %s %s", type_, name))
+	if err != nil {
+		if result == "" {
+			result = "操作失败"
+		}
+		utils.GinResult(c, http.StatusBadRequest, result, gin.H{
+			"err": err.Error(),
+		})
+		return
+	}
+	utils.GinResult(c, http.StatusOK, "操作成功", gin.H{
+		"result": result,
+	})
+}
+
 // WorkspacesDelete 删除工作区
 func (model *ServiceModel) WorkspacesDelete(c *gin.Context) {
 	name := c.Query("name")

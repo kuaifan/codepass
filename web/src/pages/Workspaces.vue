@@ -71,8 +71,11 @@
                                 </div>
                                 <div class="release">{{ item.release || '-' }}</div>
                                 <div class="state" @click="onState(item)">
-                                    <div v-if="stateRunning(item)" class="run">
+                                    <div v-if="stateJudge(item, 'Running')" class="run">
                                         <n-badge type="success" show-zero dot />
+                                    </div>
+                                    <div v-else-if="stateJudge(item, 'Stopped')" class="run">
+                                        <n-badge color="grey" show-zero dot />
                                     </div>
                                     <div v-else-if="stateLoading(item)" class="load">
                                         <Loading/>
@@ -184,6 +187,18 @@ export default defineComponent({
                 type: 'divider',
                 key: 'd1'
             }, {
+                label: '启动',
+                key: "start",
+                show: false,
+            }, {
+                label: '停止',
+                key: "stop",
+                show: false,
+            }, {
+                label: '重启',
+                key: "restart",
+                disabled: false,
+            }, {
                 label: '删除',
                 key: "delete",
             }
@@ -231,6 +246,15 @@ export default defineComponent({
             if (show) {
                 operationItem.value = item
                 operationMenu.value[0]['disabled'] = !(item.create === "Success" && item.state === "Running" && /^https*:\/\//.test(item.url))
+                if (item.state === 'Stopped') {
+                    operationMenu.value[4]['show'] = true
+                    operationMenu.value[5]['show'] = false
+                    operationMenu.value[6]['disabled'] = true
+                } else {
+                    operationMenu.value[4]['show'] = false
+                    operationMenu.value[5]['show'] = true
+                    operationMenu.value[6]['disabled'] = false
+                }
             }
         }
         const operationSelect = (key: string | number, item) => {
@@ -240,6 +264,39 @@ export default defineComponent({
             } else if (key === 'log') {
                 logName.value = item.name
                 logModal.value = true
+            } else if (key === 'start') {
+                const dd = dialog.warning({
+                    title: '启动工作区',
+                    content: '确定要启动该工作区吗？',
+                    positiveText: '确定',
+                    negativeText: '取消',
+                    onPositiveClick: () => {
+                        dd.loading = true
+                        return operationInstance('start', item.name)
+                    }
+                })
+            } else if (key === 'stop') {
+                const dd = dialog.warning({
+                    title: '停止工作区',
+                    content: '确定要停止该工作区吗？',
+                    positiveText: '确定',
+                    negativeText: '取消',
+                    onPositiveClick: () => {
+                        dd.loading = true
+                        return operationInstance('stop', item.name)
+                    }
+                })
+            } else if (key === 'restart') {
+                const dd = dialog.warning({
+                    title: '重启工作区',
+                    content: '确定要重启该工作区吗？',
+                    positiveText: '确定',
+                    negativeText: '取消',
+                    onPositiveClick: () => {
+                        dd.loading = true
+                        return operationInstance('restart', item.name)
+                    }
+                })
             } else if (key === 'delete') {
                 const dd = dialog.warning({
                     title: '删除工作区',
@@ -267,6 +324,20 @@ export default defineComponent({
                 })
             }
         }
+        const operationInstance = (type, name) => {
+            return new Promise((resolve) => {
+                call({
+                    method: "get",
+                    url: 'workspaces/operation',
+                    data: {type, name}
+                }).then(({msg}) => {
+                    message.success(msg)
+                    onLoad(false, true)
+                }).catch(({msg}) => {
+                    message.error(msg)
+                }).finally(resolve)
+            })
+        }
         const addIcon = () => {
             return h(AddOutline);
         }
@@ -274,13 +345,12 @@ export default defineComponent({
             createModal.value = false
             onLoad(true, true)
         }
-        const stateRunning = (item) => {
-            const state = stateText(item)
-            return state === 'Running'
+        const stateJudge = (item, state) => {
+            return stateText(item) === state
         }
         const stateLoading = (item) => {
             const state = stateText(item)
-            return ['Running', 'Success', 'Failed', 'Unknown', 'Error'].indexOf(state) === -1
+            return state.slice(-3) === 'ing' && state != "Running"
         }
         const stateStyle = (item) => {
             const state = stateText(item)
@@ -362,7 +432,7 @@ export default defineComponent({
             operationSelect,
             addIcon,
             createDone,
-            stateRunning,
+            stateJudge,
             stateLoading,
             stateStyle,
             stateText,
