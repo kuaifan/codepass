@@ -142,6 +142,21 @@ func workspacesList() []*instanceModel {
 	return list
 }
 
+// 获取工作区基本信息（通过工作区名称）
+func instanceInfo(name string, oneself bool) (*instanceModel, error) {
+	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
+	if !utils.IsDir(dirPath) {
+		return nil, fmt.Errorf("工作区不存在")
+	}
+	info := instanceBase(&instanceModel{
+		Name: name,
+	})
+	if oneself && info.OwnerName != ServiceConf.GithubUserInfo.Login {
+		return nil, fmt.Errorf("无权操作：此工作区不属于你")
+	}
+	return info, nil
+}
+
 // 获取工作区基本信息
 func instanceBase(entry *instanceModel) *instanceModel {
 	name := entry.Name

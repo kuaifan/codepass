@@ -171,13 +171,13 @@ func (model *ServiceModel) WorkspacesList(c *gin.Context) {
 func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 	name := c.Query("name")
 	format := c.Query("format")
-	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
-	if !utils.IsDir(dirPath) {
-		utils.GinResult(c, http.StatusBadRequest, "工作区不存在")
+	//
+	_, err := instanceInfo(name, true)
+	if err != nil {
+		utils.GinResult(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	var result string
-	var err error
 	if format == "hard" {
 		result, err = utils.Cmd("-c", fmt.Sprintf("multipass get local.%s.cpus && multipass get local.%s.disk && multipass get local.%s.memory", name, name, name))
 	} else if format == "json" {
@@ -245,9 +245,13 @@ func (model *ServiceModel) WorkspacesModify(c *gin.Context) {
 		disk   = utils.GinInput(c, "disk")
 		memory = utils.GinInput(c, "memory")
 	)
-	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
-	if !utils.IsDir(dirPath) {
-		utils.GinResult(c, http.StatusBadRequest, "工作区不存在")
+	info, err := instanceInfo(name, true)
+	if err != nil {
+		utils.GinResult(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	if info.State != "Stopped" {
+		utils.GinResult(c, http.StatusBadRequest, "请先停止工作区")
 		return
 	}
 	if cpus != "" && !utils.Test(cpus, "^\\d+$") {
@@ -283,9 +287,9 @@ func (model *ServiceModel) WorkspacesOperation(c *gin.Context) {
 		utils.GinResult(c, http.StatusBadRequest, "操作类型错误")
 		return
 	}
-	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
-	if !utils.IsDir(dirPath) {
-		utils.GinResult(c, http.StatusBadRequest, "工作区不存在")
+	_, err := instanceInfo(name, true)
+	if err != nil {
+		utils.GinResult(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	result, err := utils.Cmd("-c", fmt.Sprintf("multipass %s %s", type_, name))
@@ -307,6 +311,11 @@ func (model *ServiceModel) WorkspacesOperation(c *gin.Context) {
 func (model *ServiceModel) WorkspacesDelete(c *gin.Context) {
 	name := c.Query("name")
 	//
+	info, _ := instanceInfo(name, true)
+	if info != nil && info.OwnerName != ServiceConf.GithubUserInfo.Login {
+		utils.GinResult(c, http.StatusBadRequest, "无权操作：此工作区不属于你")
+		return
+	}
 	_, err := utils.Cmd("-c", fmt.Sprintf("multipass info %s", name))
 	if err == nil {
 		_, err = utils.Cmd("-c", fmt.Sprintf("multipass delete --purge %s", name)) // 删除工作区

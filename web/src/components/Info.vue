@@ -13,7 +13,7 @@
                 size="huge"
                 closable
                 @close="modifyModal=false">
-                <Modify :name="name"/>
+                <Modify :name="name" @modifyDone="modifyModal=false"/>
             </n-card>
         </n-modal>
     </div>

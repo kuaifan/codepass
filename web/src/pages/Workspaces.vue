@@ -189,11 +189,11 @@ export default defineComponent({
             }, {
                 label: '启动',
                 key: "start",
-                show: false,
+                disabled: false,
             }, {
                 label: '停止',
                 key: "stop",
-                show: false,
+                disabled: false,
             }, {
                 label: '重启',
                 key: "restart",
@@ -247,12 +247,12 @@ export default defineComponent({
                 operationItem.value = item
                 operationMenu.value[0]['disabled'] = !(item.create === "Success" && item.state === "Running" && /^https*:\/\//.test(item.url))
                 if (item.state === 'Stopped') {
-                    operationMenu.value[4]['show'] = true
-                    operationMenu.value[5]['show'] = false
+                    operationMenu.value[4]['disabled'] = false
+                    operationMenu.value[5]['disabled'] = true
                     operationMenu.value[6]['disabled'] = true
                 } else {
-                    operationMenu.value[4]['show'] = false
-                    operationMenu.value[5]['show'] = true
+                    operationMenu.value[4]['disabled'] = true
+                    operationMenu.value[5]['disabled'] = false
                     operationMenu.value[6]['disabled'] = false
                 }
             }

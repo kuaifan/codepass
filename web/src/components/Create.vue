@@ -17,34 +17,34 @@
                     tag
                     placeholder="请输入或选择储存库地址"/>
         </n-form-item>
-        <n-form-item v-show="advanced" path="cpus" label="CPU">
+        <n-form-item v-show="advancedShow" path="cpus" label="CPU">
             <n-input v-model:value="formData.cpus" placeholder="请输入CPU核数">
                 <template #suffix>
                     核
                 </template>
             </n-input>
         </n-form-item>
-        <n-form-item v-show="advanced" path="memory" label="内存">
+        <n-form-item v-show="advancedShow" path="memory" label="内存">
             <n-input v-model:value="formData.memory" placeholder="请输入内存大小">
                 <template #suffix>
                     GB
                 </template>
             </n-input>
         </n-form-item>
-        <n-form-item v-show="advanced" path="disk" label="磁盘">
+        <n-form-item v-show="advancedShow" path="disk" label="磁盘">
             <n-input v-model:value="formData.disk" placeholder="请输入磁盘大小">
                 <template #suffix>
                     GB
                 </template>
             </n-input>
         </n-form-item>
-        <n-form-item v-show="advanced" path="image" label="系统">
+        <n-form-item v-show="advancedShow" path="image" label="系统">
             <n-select v-model:value="formData.image" :options="imageList" placeholder="请选择系统版本"/>
         </n-form-item>
         <n-row :gutter="[0, 24]">
             <n-col :span="24">
                 <div class="button-group">
-                    <n-button round quaternary type="default" @click="advanced=!advanced">
+                    <n-button round quaternary type="default" @click="advancedShow=!advancedShow">
                         {{advancedText}}
                     </n-button>
                     <n-button :loading="loadIng" round type="primary" @click="handleSubmit">
@@ -78,7 +78,6 @@ export default defineComponent({
     setup(props, {emit}) {
         const message = useMessage()
         const dialog = useDialog()
-        const advanced = ref<boolean>(false)
         const loadIng = ref<boolean>(false)
         const formRef = ref<FormInst | null>(null)
         const formData = ref<ModelType>({
@@ -116,8 +115,10 @@ export default defineComponent({
                 value: item
             }
         })
+
+        const advancedShow = ref<boolean>(false)
         const advancedText = computed(() => {
-            if (advanced.value) {
+            if (advancedShow.value) {
                 return "收起"
             }
             let str = ""
@@ -236,7 +237,7 @@ export default defineComponent({
             })
         }
         return {
-            advanced,
+            advancedShow,
             advancedText,
             loadIng,
             formRef,
