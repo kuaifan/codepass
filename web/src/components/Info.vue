@@ -3,7 +3,19 @@
         <n-log ref="nRef" :log="content" :rows="10" trim/>
         <div class="footer">
             <n-button :loading="loading" @click="getData">刷新</n-button>
+            <n-button type="primary" @click="onModify">修改</n-button>
         </div>
+        <n-modal v-model:show="modifyModal" :auto-focus="false">
+            <n-card
+                style="width:600px;max-width:90%"
+                title="修改工作区"
+                :bordered="false"
+                size="huge"
+                closable
+                @close="modifyModal=false">
+                <Modify :name="name"/>
+            </n-card>
+        </n-modal>
     </div>
 </template>
 
@@ -14,6 +26,9 @@
         align-items: center;
         justify-content: center;
         margin-top: 26px;
+        > * {
+            margin: 0 8px;
+        }
     }
 }
 </style>
@@ -21,8 +36,10 @@
 import {defineComponent, ref} from 'vue'
 import call from "../call.js";
 import {useMessage} from "naive-ui";
+import Modify from "./Modify.vue";
 
 export default defineComponent({
+    components: {Modify},
     props: {
         name: {
             type: String,
@@ -35,6 +52,7 @@ export default defineComponent({
         const content = ref("");
         const loading = ref(false);
         const nRef = ref(null);
+        const modifyModal = ref(false);
 
         const getData = () => {
             if (loading.value) {
@@ -57,13 +75,18 @@ export default defineComponent({
             })
         }
         getData()
+        const onModify = () => {
+            modifyModal.value = true
+        }
 
         return {
             content,
             loading,
             nRef,
+            modifyModal,
 
-            getData
+            getData,
+            onModify,
         }
     }
 })

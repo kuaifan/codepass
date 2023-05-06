@@ -178,7 +178,9 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 	}
 	var result string
 	var err error
-	if format == "json" {
+	if format == "hard" {
+		result, err = utils.Cmd("-c", fmt.Sprintf("multipass get local.%s.cpus && multipass get local.%s.disk && multipass get local.%s.memory", name, name, name))
+	} else if format == "json" {
 		result, err = utils.Cmd("-c", fmt.Sprintf("multipass info %s --format json", name))
 	} else {
 		result, err = utils.Cmd("-c", fmt.Sprintf("multipass info %s", name))
@@ -190,7 +192,16 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 		return
 	}
 	var info any
-	if format == "json" {
+	if format == "hard" {
+		// 按换行分割 result
+		res := strings.Split(result, "\n")
+		utils.GinResult(c, http.StatusOK, "获取成功", gin.H{
+			"cpus":   res[0],
+			"disk":   res[1],
+			"memory": res[2],
+		})
+		return
+	} else if format == "json" {
 		var data infoModel
 		if err = json.Unmarshal([]byte(result), &data); err != nil {
 			utils.GinResult(c, http.StatusBadRequest, "解析失败", gin.H{
@@ -222,6 +233,45 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 		"repos_name":  reposName,
 		"repos_url":   reposUrl,
 		"info":        info,
+	})
+}
+
+// WorkspacesModify 修改工作区
+func (model *ServiceModel) WorkspacesModify(c *gin.Context) {
+	// 参数校验
+	var (
+		name   = utils.GinInput(c, "name")
+		cpus   = utils.GinInput(c, "cpus")
+		disk   = utils.GinInput(c, "disk")
+		memory = utils.GinInput(c, "memory")
+	)
+	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
+	if !utils.IsDir(dirPath) {
+		utils.GinResult(c, http.StatusBadRequest, "工作区不存在")
+		return
+	}
+	if cpus != "" && !utils.Test(cpus, "^\\d+$") {
+		utils.GinResult(c, http.StatusBadRequest, "CPU只能是存数字")
+		return
+	}
+	if disk != "" && utils.Test(disk, "^\\d+$") {
+		disk = fmt.Sprintf("%sGB", disk)
+	}
+	if memory != "" && utils.Test(memory, "^\\d+$") {
+		memory = fmt.Sprintf("%sGB", memory)
+	}
+	result, err := utils.Cmd("-c", fmt.Sprintf("multipass set local.%s.cpus=%s && multipass set local.%s.disk=%s && multipass set local.%s.memory=%s", name, cpus, name, disk, name, memory))
+	if err != nil {
+		if result == "" {
+			result = "修改失败"
+		}
+		utils.GinResult(c, http.StatusBadRequest, result, gin.H{
+			"err": err.Error(),
+		})
+		return
+	}
+	utils.GinResult(c, http.StatusOK, "修改成功", gin.H{
+		"result": result,
 	})
 }
 
