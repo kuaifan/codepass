@@ -81,7 +81,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	proxyUri := proxyRegexp.ReplaceAllString(url, "$1{{port}}-")
 	// 生成创建脚本
 	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
-	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/log", name))
+	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/logs", name))
 	err := utils.WriteFile(cmdFile, utils.TemplateContent(utils.CreateExecContent, map[string]any{
 		"NAME":         name,
 		"PASSWORD":     password,
@@ -130,7 +130,7 @@ func (model *ServiceModel) WorkspacesLog(c *gin.Context) {
 	if tail > 10000 {
 		tail = 10000
 	}
-	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/log", name))
+	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/logs", name))
 	statusFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/status", name))
 	if !utils.IsFile(logFile) {
 		utils.GinResult(c, http.StatusBadRequest, "日志文件不存在")

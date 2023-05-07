@@ -175,7 +175,9 @@ func instanceBase(entry *instanceModel) *instanceModel {
 		entry.Ip = entry.Ipv4[0]
 	}
 	entry.Status = strings.TrimSpace(utils.ReadFile(statusFile))
-	entry.Domain, entry.Url = instanceDomain(name)
+	if entry.Status == "Success" && entry.State == "Running" {
+		entry.Domain, entry.Url = instanceDomain(name)
+	}
 	return entry
 }
 
@@ -193,12 +195,12 @@ func instanceDomain(name string) (string, string) {
 }
 
 // 设置工作区状态（或日志）
-func instanceStatus(name, status, log string) {
+func instanceStatus(name, status, logText string) {
 	statusFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/status", name))
 	_ = utils.WriteFile(statusFile, status)
-	if log != "" {
-		logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/log", name))
-		_ = utils.AppendToFile(logFile, log)
+	if logText != "" {
+		logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/logs", name))
+		_ = utils.AppendToFile(logFile, fmt.Sprintf("%s\n", logText))
 	}
 }
 

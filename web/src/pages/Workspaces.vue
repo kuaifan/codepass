@@ -247,17 +247,19 @@ export default defineComponent({
         const operationShow = (show: boolean, item) => {
             if (show) {
                 operationItem.value = item
-                operationMenu.value[0]['disabled'] = !(item.status === "Success" && item.state === "Running" && /^https*:\/\//.test(item.url))
-                if (item.state === 'Stopped') {
-                    operationMenu.value[4]['disabled'] = false
-                    operationMenu.value[5]['disabled'] = true
-                    operationMenu.value[6]['disabled'] = true
-                } else {
-                    operationMenu.value[4]['disabled'] = true
-                    operationMenu.value[5]['disabled'] = false
-                    operationMenu.value[6]['disabled'] = false
-                }
+                const state = stateText(item)
+                operationSetDisabled('open', !/^https*:\/\//.test(item.url))
+                operationSetDisabled('start', state !== 'Stopped')
+                operationSetDisabled('stop', state !== "Running")
+                operationSetDisabled('restart', state !== "Running")
             }
+        }
+        const operationSetDisabled = (key: string, disabled: boolean) => {
+            operationMenu.value.forEach(item => {
+                if (item.key === key) {
+                    item['disabled'] = disabled
+                }
+            })
         }
         const operationSelect = (key: string | number, item) => {
             if (key === 'info') {
