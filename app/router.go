@@ -127,10 +127,6 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 		ServiceConf.WorkspacesOperation(c)
 		return
 	}
-	if strings.HasPrefix(urlPath, "/api/workspaces/delete") {
-		ServiceConf.WorkspacesDelete(c)
-		return
-	}
 	// 页面输出
 	c.HTML(http.StatusOK, "/web/dist/index.html", gin.H{
 		"CODE": "",

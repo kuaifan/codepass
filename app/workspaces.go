@@ -268,15 +268,16 @@ func (model *ServiceModel) WorkspacesModify(c *gin.Context) {
 	})
 }
 
-// WorkspacesOperation 操作工作区（启动、停止、重启）
+// WorkspacesOperation 操作工作区（启动、停止、重启、删除）
 func (model *ServiceModel) WorkspacesOperation(c *gin.Context) {
 	name := c.Query("name")
-	type_ := c.Query("type")
+	operation := c.Query("operation")
 	status := map[string]string{
 		"start":   "Starting",
 		"stop":    "Stoping",
 		"restart": "Restarting",
-	}[type_]
+		"delete":  "Deleting",
+	}[operation]
 	if status == "" {
 		utils.GinResult(c, http.StatusBadRequest, "操作类型错误")
 		return
@@ -286,47 +287,27 @@ func (model *ServiceModel) WorkspacesOperation(c *gin.Context) {
 		utils.GinResult(c, http.StatusBadRequest, err.Error())
 		return
 	}
+	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/operation", name))
+	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/logs", name))
+	err = utils.WriteFile(cmdFile, utils.TemplateContent(utils.OperationContent, map[string]any{
+		"NAME":      name,
+		"OPERATION": operation,
+	}))
+	if err != nil {
+		utils.GinResult(c, http.StatusBadRequest, "创建操作失败", gin.H{
+			"err": err.Error(),
+		})
+		return
+	}
+	// 执行操作脚本
 	go func() {
-		instanceStatus(name, status, fmt.Sprintf("%s...", status))
-		result, err1 := utils.Cmd("-c", fmt.Sprintf("multipass %s %s", type_, name))
-		if err1 != nil {
-			instanceStatus(name, "Error", fmt.Sprintf("%s...失败: %s", status, result))
-		} else {
-			instanceStatus(name, "Success", fmt.Sprintf("%s...完成", status))
+		_, _ = utils.Cmd("-c", fmt.Sprintf("chmod +x %s", cmdFile))
+		_, _ = utils.Cmd("-c", fmt.Sprintf("/bin/bash %s > %s 2>&1", cmdFile, logFile))
+		if operation == "delete" {
+			UpdateProxy()
 		}
 	}()
 	utils.GinResult(c, http.StatusOK, "操作成功", gin.H{
 		"status": status,
-	})
-}
-
-// WorkspacesDelete 删除工作区
-func (model *ServiceModel) WorkspacesDelete(c *gin.Context) {
-	name := c.Query("name")
-	//
-	info, _ := instanceInfo(name, true)
-	if info != nil && info.OwnerName != ServiceConf.GithubUserInfo.Login {
-		utils.GinResult(c, http.StatusBadRequest, "无权操作：此工作区不属于你")
-		return
-	}
-	go func() {
-		instanceStatus(name, "Deleting", "Deleting...")
-		_, err := utils.Cmd("-c", fmt.Sprintf("multipass info %s", name))
-		if err == nil {
-			_, err = utils.Cmd("-c", fmt.Sprintf("multipass delete --purge %s", name)) // 删除工作区
-		}
-		dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
-		if utils.IsDir(dirPath) {
-			_, _ = utils.Cmd("-c", fmt.Sprintf("rm -rf %s", dirPath)) // 删除工作区目录
-		}
-		if err != nil {
-			instanceStatus(name, "Error", fmt.Sprintf("Deleting...失败: %s", err.Error()))
-		} else {
-			// 已经删除目录，无须标记为完成
-		}
-		UpdateProxy()
-	}()
-	utils.GinResult(c, http.StatusOK, "操作成功", gin.H{
-		"status": "Deleting",
 	})
 }

@@ -235,6 +235,84 @@ STATUS "Success"
 rm -f $CmdPath
 `)
 
+// OperationContent 操作内容
+const OperationContent = string(`
+#!/bin/bash
+
+# 脚本路径
+CmdPath=$0
+
+# 全局变量
+# {{.NAME}}
+# {{.OPERATION}}
+
+# 保存状态
+STATUS() {
+	echo "$1" > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/status
+}
+
+start() {
+	STATUS "Starting"
+	echo "Starting..."
+	multipass start {{.NAME}}
+	if [ 0 -eq $? ]; then
+		STATUS "Success"
+		echo "Started"
+	else
+		STATUS "Error"
+		echo "Start failed"
+	fi
+}
+
+stop() {
+	STATUS "Stopping"
+	echo "Stopping..."
+	multipass stop {{.NAME}}
+	if [ 0 -eq $? ]; then
+		STATUS "Success"
+		echo "Stopped"
+	else
+		STATUS "Error"
+		echo "Stop failed"
+	fi
+}
+
+restart() {
+	STATUS "Restarting"
+	echo "Restarting..."
+	multipass restart {{.NAME}}
+	if [ 0 -eq $? ]; then
+		STATUS "Success"
+		echo "Restarted"
+	else
+		STATUS "Error"
+		echo "Restart failed"
+	fi
+}
+
+delete() {
+	STATUS "Deleting"
+	echo "Deleting..."
+	multipass delete --purge {{.NAME}}
+	if [ 0 -eq $? ]; then
+		STATUS "Success"
+		echo "Deleted"
+	else
+		STATUS "Error"
+		echo "Delete failed"
+	fi
+	if [ -d "{{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}" ]; then
+		rm -rf {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}
+	fi
+}
+
+# 执行命令
+{{.OPERATION}}
+
+# 删除脚本
+rm -f $CmdPath
+`)
+
 // TemplateContent 从模板中获取内容
 func TemplateContent(templateContent string, envMap map[string]interface{}) string {
 	templateContent = strings.ReplaceAll(templateContent, "\t", "    ")

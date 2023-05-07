@@ -316,37 +316,17 @@ export default defineComponent({
                     negativeText: '取消',
                     onPositiveClick: () => {
                         dd.loading = true
-                        return new Promise((resolve) => {
-                            call({
-                                method: "get",
-                                url: 'workspaces/delete',
-                                data: {
-                                    name: item.name
-                                }
-                            }).then(({data, msg}) => {
-                                message.success(msg)
-                                setItemStatus(item.name, data.status)
-                            }).catch(({msg}) => {
-                                dialog.error({
-                                    title: '请求错误',
-                                    content: msg,
-                                    positiveText: '确定',
-                                    onPositiveClick: () => {
-                                        onLoad(false, true)
-                                    }
-                                })
-                            }).finally(resolve)
-                        })
+                        return operationInstance('delete', item.name)
                     }
                 })
             }
         }
-        const operationInstance = (type, name) => {
+        const operationInstance = (operation, name) => {
             return new Promise((resolve) => {
                 call({
                     method: "get",
                     url: 'workspaces/operation',
-                    data: {type, name}
+                    data: {operation, name}
                 }).then(({data, msg}) => {
                     message.success(msg)
                     setItemStatus(name, data.status)
