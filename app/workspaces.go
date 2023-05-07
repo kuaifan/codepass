@@ -158,10 +158,6 @@ func (model *ServiceModel) WorkspacesList(c *gin.Context) {
 			list = append(list, entry)
 		}
 	}
-	if list == nil {
-		utils.GinResult(c, http.StatusBadRequest, "暂无数据")
-		return
-	}
 	utils.GinResult(c, http.StatusOK, "获取成功", gin.H{
 		"list": list,
 	})

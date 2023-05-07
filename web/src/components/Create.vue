@@ -227,9 +227,8 @@ export default defineComponent({
                     emit('createDone')
                 }).catch(({msg}) => {
                     dialog.error({
-                        title: '创建失败',
+                        title: '请求错误',
                         content: msg,
-                        positiveText: '确定',
                     })
                 }).finally(() => {
                     loadIng.value = false

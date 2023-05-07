@@ -139,6 +139,7 @@ import Info from "../components/Info.vue";
 import {AddOutline, EllipsisVertical, Reload, SearchOutline} from "@vicons/ionicons5";
 import {useMessage, useDialog, NButton} from "naive-ui";
 import call from "../call.js";
+import utils from "../utils.js";
 
 export default defineComponent({
     components: {
@@ -316,8 +317,13 @@ export default defineComponent({
                                 message.success(msg)
                                 items.value = items.value.filter(i => i.name !== item.name)
                             }).catch(({msg}) => {
-                                message.error(msg)
-                                onLoad(false, true)
+                                dialog.error({
+                                    title: '请求错误',
+                                    content: msg,
+                                    onPositiveClick: () => {
+                                        onLoad(false, true)
+                                    }
+                                })
                             }).finally(resolve)
                         })
                     }
@@ -334,7 +340,10 @@ export default defineComponent({
                     message.success(msg)
                     onLoad(false, true)
                 }).catch(({msg}) => {
-                    message.error(msg)
+                    dialog.error({
+                        title: '请求错误',
+                        content: msg,
+                    })
                 }).finally(resolve)
             })
         }
@@ -398,13 +407,19 @@ export default defineComponent({
                 method: "get",
                 url: 'workspaces/list',
             }).then(({data}) => {
-                items.value = data.list
-            }).catch(err => {
-                if (tip === true) {
-                    message.error(err.msg)
-                } else {
-                    console.log(err)
+                if (!utils.isArray(data.list)) {
+                    if (tip === true) {
+                        message.warning("暂无数据")
+                    }
+                    items.value = []
+                    return
                 }
+                items.value = data.list
+            }).catch(({msg}) => {
+                tip && dialog.error({
+                    title: '请求错误',
+                    content: msg,
+                })
             }).finally(() => {
                 loadIng.value = false
             })

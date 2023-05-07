@@ -93,7 +93,10 @@ export default defineComponent({
             formData.value.memory = String(utils.parseInt(data.memory))
             formData.value.disk = String(utils.parseInt(data.disk))
         }).catch(({msg}) => {
-            message.error("获取信息失败: " + msg);
+            dialog.error({
+                title: '请求错误',
+                content: msg,
+            })
         }).finally(() => {
             readIng.value = false
         })
@@ -169,9 +172,8 @@ export default defineComponent({
                     emit('modifyDone')
                 }).catch(({msg}) => {
                     dialog.error({
-                        title: '修改失败',
+                        title: '请求错误',
                         content: msg,
-                        positiveText: '确定',
                     })
                 }).finally(() => {
                     loadIng.value = false

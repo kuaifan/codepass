@@ -35,7 +35,7 @@
 <script lang="ts">
 import {defineComponent, ref} from 'vue'
 import call from "../call.js";
-import {useMessage} from "naive-ui";
+import {useDialog} from "naive-ui";
 import Modify from "./Modify.vue";
 
 export default defineComponent({
@@ -47,7 +47,7 @@ export default defineComponent({
         }
     },
     setup(props) {
-        const message = useMessage()
+        const dialog = useDialog()
 
         const content = ref("");
         const loading = ref(false);
@@ -68,8 +68,11 @@ export default defineComponent({
                 }
             }).then(({data}) => {
                 content.value = data.info
-            }).catch(err => {
-                message.error(err.msg)
+            }).catch(({msg}) => {
+                dialog.error({
+                    title: '请求错误',
+                    content: msg,
+                })
             }).finally(() => {
                 loading.value = false
             })
