@@ -117,20 +117,18 @@ func WriteByte(path string, fileByte []byte) error {
 }
 
 // AppendToFile 追加文件
-func AppendToFile(fileName string, content string) {
+func AppendToFile(fileName string, content string) error {
 	// 以只写的模式，打开文件
 	f, err := os.OpenFile(fileName, os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Println("cacheFileList.yml file create failed. err: " + err.Error())
+		return err
 	} else {
 		// 查找文件末尾的偏移量
 		n, _ := f.Seek(0, io.SeekEnd)
 		// 从末尾的偏移量开始写入内容
 		_, err = f.WriteAt([]byte(content), n)
 	}
-	defer func(f *os.File) {
-		_ = f.Close()
-	}(f)
+	return f.Close()
 }
 
 // SliceInsert 向数组插入内容

@@ -192,6 +192,16 @@ func instanceDomain(name string) (string, string) {
 	}
 }
 
+// 设置工作区状态（或日志）
+func instanceStatus(name, status, log string) {
+	statusFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/status", name))
+	_ = utils.WriteFile(statusFile, status)
+	if log != "" {
+		logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/log", name))
+		_ = utils.AppendToFile(logFile, log)
+	}
+}
+
 // 获取 GitHub token
 func githubGetToken(cid, sid, code string) (*githubTokenModel, error) {
 	var url = fmt.Sprintf("https://github.com/login/oauth/access_token?client_id=%s&client_secret=%s&code=%s", cid, sid, code)
