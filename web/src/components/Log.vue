@@ -49,7 +49,6 @@ export default defineComponent({
                 method: "get",
                 url: 'workspaces/log',
                 data: {
-                    type: 'create',
                     name: props.name
                 }
             }).then(({data}) => {

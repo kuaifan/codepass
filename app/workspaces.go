@@ -80,8 +80,8 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	proxyDomain := proxyRegexp.ReplaceAllString(url, "")
 	proxyUri := proxyRegexp.ReplaceAllString(url, "$1{{port}}-")
 	// 生成创建脚本
-	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create/cmd", name))
-	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create/log", name))
+	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
+	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/log", name))
 	err := utils.WriteFile(cmdFile, utils.TemplateContent(utils.CreateExecContent, map[string]any{
 		"NAME":         name,
 		"PASSWORD":     password,
@@ -122,7 +122,6 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 
 // WorkspacesLog 查看创建日志
 func (model *ServiceModel) WorkspacesLog(c *gin.Context) {
-	type_ := c.Query("type")
 	name := c.Query("name")
 	tail, _ := strconv.Atoi(c.Query("tail"))
 	if tail <= 0 {
@@ -131,23 +130,17 @@ func (model *ServiceModel) WorkspacesLog(c *gin.Context) {
 	if tail > 10000 {
 		tail = 10000
 	}
-	if type_ == "create" {
-		// 创建日志
-		logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create/log", name))
-		statusFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/status", name))
-		if !utils.IsFile(logFile) {
-			utils.GinResult(c, http.StatusBadRequest, "日志文件不存在")
-			return
-		}
-		logContent, _ := utils.Cmd("-c", fmt.Sprintf("tail -%d %s", tail, logFile))
-		utils.GinResult(c, http.StatusOK, "读取成功", gin.H{
-			"status": strings.TrimSpace(utils.ReadFile(statusFile)),
-			"log":    strings.TrimSpace(logContent),
-		})
-	} else {
-		// 其他日志
-		utils.GinResult(c, http.StatusBadRequest, "暂不支持")
+	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/log", name))
+	statusFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/status", name))
+	if !utils.IsFile(logFile) {
+		utils.GinResult(c, http.StatusBadRequest, "日志文件不存在")
+		return
 	}
+	logContent, _ := utils.Cmd("-c", fmt.Sprintf("tail -%d %s", tail, logFile))
+	utils.GinResult(c, http.StatusOK, "读取成功", gin.H{
+		"status": strings.TrimSpace(utils.ReadFile(statusFile)),
+		"log":    strings.TrimSpace(logContent),
+	})
 }
 
 // WorkspacesList 获取工作区列表
