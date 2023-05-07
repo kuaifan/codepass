@@ -288,17 +288,16 @@ func (model *ServiceModel) WorkspacesOperation(c *gin.Context) {
 	}
 	go func() {
 		instanceStatus(name, status, fmt.Sprintf("%s...", status))
-		result, err := utils.Cmd("-c", fmt.Sprintf("multipass %s %s", type_, name))
-		if err != nil {
-			if result == "" {
-				result = "操作失败"
-			}
+		result, err1 := utils.Cmd("-c", fmt.Sprintf("multipass %s %s", type_, name))
+		if err1 != nil {
 			instanceStatus(name, "Error", fmt.Sprintf("%s...失败: %s", status, result))
 		} else {
 			instanceStatus(name, "Success", fmt.Sprintf("%s...完成", status))
 		}
 	}()
-	utils.GinResult(c, http.StatusOK, "操作成功")
+	utils.GinResult(c, http.StatusOK, "操作成功", gin.H{
+		"status": status,
+	})
 }
 
 // WorkspacesDelete 删除工作区
@@ -327,5 +326,7 @@ func (model *ServiceModel) WorkspacesDelete(c *gin.Context) {
 		}
 		UpdateProxy()
 	}()
-	utils.GinResult(c, http.StatusOK, "操作成功")
+	utils.GinResult(c, http.StatusOK, "操作成功", gin.H{
+		"status": "Deleting",
+	})
 }

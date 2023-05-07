@@ -174,6 +174,13 @@ export default defineComponent({
             }
             return items.value.filter(item => item.name.indexOf(searchKey.value) !== -1)
         })
+        const setItemStatus = (name, status) => {
+            items.value.forEach(item => {
+                if (item.name === name) {
+                    item.status = status
+                }
+            })
+        }
         const operationMenu = ref([
             {
                 label: '打开',
@@ -316,9 +323,9 @@ export default defineComponent({
                                 data: {
                                     name: item.name
                                 }
-                            }).then(({msg}) => {
+                            }).then(({data, msg}) => {
                                 message.success(msg)
-                                items.value = items.value.filter(i => i.name !== item.name)
+                                setItemStatus(item.name, data.status)
                             }).catch(({msg}) => {
                                 dialog.error({
                                     title: '请求错误',
@@ -340,8 +347,9 @@ export default defineComponent({
                     method: "get",
                     url: 'workspaces/operation',
                     data: {type, name}
-                }).then(({msg}) => {
+                }).then(({data, msg}) => {
                     message.success(msg)
+                    setItemStatus(name, data.status)
                     onLoad(false, true)
                 }).catch(({msg}) => {
                     dialog.error({
