@@ -13,7 +13,7 @@
                 size="huge"
                 closable
                 @close="modifyModal=false">
-                <Modify :name="name" @modifyDone="modifyModal=false"/>
+                <Modify :name="name" v-model:show="modifyModal"/>
             </n-card>
         </n-modal>
     </div>
@@ -44,9 +44,12 @@ export default defineComponent({
         name: {
             type: String,
             required: true
-        }
+        },
+        show: {
+            type: Boolean,
+        },
     },
-    setup(props) {
+    setup(props, {emit}) {
         const dialog = useDialog()
 
         const content = ref("");
@@ -72,6 +75,10 @@ export default defineComponent({
                 dialog.error({
                     title: '请求错误',
                     content: msg,
+                    positiveText: '确定',
+                    onPositiveClick: () => {
+                        emit("update:show", false)
+                    }
                 })
             }).finally(() => {
                 loading.value = false

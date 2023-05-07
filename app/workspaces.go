@@ -80,8 +80,8 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	proxyDomain := proxyRegexp.ReplaceAllString(url, "")
 	proxyUri := proxyRegexp.ReplaceAllString(url, "$1{{port}}-")
 	// 生成创建脚本
-	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.sh", name))
-	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.log", name))
+	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create/cmd", name))
+	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create/log", name))
 	err := utils.WriteFile(cmdFile, utils.TemplateContent(utils.CreateExecContent, map[string]any{
 		"NAME":         name,
 		"PASSWORD":     password,
@@ -133,15 +133,15 @@ func (model *ServiceModel) WorkspacesLog(c *gin.Context) {
 	}
 	if type_ == "create" {
 		// 创建日志
-		logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create.log", name))
-		createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
+		logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create/log", name))
+		statusFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/status", name))
 		if !utils.IsFile(logFile) {
 			utils.GinResult(c, http.StatusBadRequest, "日志文件不存在")
 			return
 		}
 		logContent, _ := utils.Cmd("-c", fmt.Sprintf("tail -%d %s", tail, logFile))
 		utils.GinResult(c, http.StatusOK, "读取成功", gin.H{
-			"create": strings.TrimSpace(utils.ReadFile(createFile)),
+			"status": strings.TrimSpace(utils.ReadFile(statusFile)),
 			"log":    strings.TrimSpace(logContent),
 		})
 	} else {
@@ -209,7 +209,7 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 	} else {
 		info = result
 	}
-	createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
+	statusFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/status", name))
 	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/code-server/config.yaml", name)))
 	_ = viper.ReadInConfig()
 	password := viper.GetString("password")
@@ -222,7 +222,7 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 		reposUrl   = viper.GetString("repos_url")
 	)
 	utils.GinResult(c, http.StatusOK, "获取成功", gin.H{
-		"create":      strings.TrimSpace(utils.ReadFile(createFile)),
+		"status":      strings.TrimSpace(utils.ReadFile(statusFile)),
 		"password":    password,
 		"owner_name":  ownerName,
 		"repos_owner": reposOwner,

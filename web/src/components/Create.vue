@@ -224,11 +224,12 @@ export default defineComponent({
                     data
                 }).then(({msg}) => {
                     message.success(msg);
-                    emit('createDone')
+                    emit('onDone')
                 }).catch(({msg}) => {
                     dialog.error({
                         title: '请求错误',
                         content: msg,
+                        positiveText: '确定',
                     })
                 }).finally(() => {
                     loadIng.value = false

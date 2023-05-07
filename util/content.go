@@ -111,10 +111,10 @@ CmdPath=$0
 # {{.CREATED_AT}}
 
 # 保存状态
-CREATE() {
+STATUS() {
 	echo ""
 	echo "[$1]"
-	echo "$1" > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/create
+	echo "$1" > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/status
 }
 
 # 判断状态
@@ -123,7 +123,7 @@ JUDGEA() {
 		echo "$1 完成"
 	else
 		echo "$1 失败"
-		CREATE "Failed"
+		STATUS "Failed"
 		rm -f $CmdPath
 		exit 1
 	fi
@@ -135,14 +135,14 @@ JUDGEB() {
 		echo "$desc 完成"
 	else
 		echo "$desc 失败"
-		CREATE "Failed"
+		STATUS "Failed"
 		rm -f $CmdPath
 		exit 1
 	fi
 }
 
 # 准备工作
-CREATE "Preparing"
+STATUS "Preparing"
 mkdir -p {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/code-server
 mkdir -p {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/workspace
 cat > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/info.yaml <<-EOF
@@ -156,7 +156,7 @@ cat > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/init.yaml <<-EOF
 runcmd:
   - curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
   - sudo apt-get install -y nodejs
-  - sudo curl -sSL https://get.daocloud.io/docker | sh
+  - sudo curl -sSL https://get.docker.com/ | sh
   - sudo systemctl start docker
 EOF
 cat > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/code-server/config.yaml <<-EOF
@@ -169,7 +169,7 @@ cert: false
 EOF
 
 # 启动虚拟机
-CREATE "Launching"
+STATUS "Launching"
 start="multipass launch {{.IMAGE}} --name {{.NAME}}"
 start="$start --cloud-init {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/init.yaml"
 start="$start --mount {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config:~/.config"
@@ -182,7 +182,7 @@ multipass info {{.NAME}} > /dev/null 2>&1
 JUDGEA "Launch"
 
 # 安装 code-server
-CREATE "Installing"
+STATUS "Installing"
 multipass exec {{.NAME}} -- sh <<-EOE
 curl -fsSL https://code-server.dev/install.sh | sh
 sudo sh -c 'echo ".card-box > .header {display:none}" >> /usr/lib/code-server/src/browser/pages/login.css'
@@ -201,7 +201,7 @@ EOE
 JUDGEB "Install"
 
 # Cloning
-CREATE "Cloning"
+STATUS "Cloning"
 multipass exec {{.NAME}} -- sh <<-EOE
 {{.CLONE_CMD}} /workspace/{{.REPOS_NAME}}
 if [ -d "/workspace/{{.REPOS_NAME}}/.git/" ]; then
@@ -213,7 +213,7 @@ EOE
 JUDGEB "Clone"
 
 # 启动 code-server
-CREATE "Starting"
+STATUS "Starting"
 multipass exec {{.NAME}} -- sudo sh <<-EOE
 systemctl set-environment CODE_PASS_IMAGE={{.IMAGE}}
 systemctl set-environment PROXY_DOMAIN={{.PROXY_DOMAIN}}
@@ -229,7 +229,7 @@ EOE
 JUDGEB "Start"
 
 # 输出成功
-CREATE "Success"
+STATUS "Success"
 
 # 删除脚本
 rm -f $CmdPath

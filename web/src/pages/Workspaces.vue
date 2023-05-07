@@ -36,7 +36,7 @@
                         size="huge"
                         closable
                         @close="createModal=false">
-                    <Create @createDone="createDone"/>
+                    <Create @onDone="createDone"/>
                 </n-card>
             </n-modal>
         </div>
@@ -110,7 +110,7 @@
                         size="huge"
                         closable
                         @close="infoModal=false">
-                    <Info :name="infoName"/>
+                    <Info :name="infoName" v-model:show="logModal"/>
                 </n-card>
             </n-modal>
             <n-modal v-model:show="logModal" :auto-focus="false">
@@ -121,7 +121,7 @@
                         size="huge"
                         closable
                         @close="logModal=false">
-                    <Log :name="logName"/>
+                    <Log :name="logName" v-model:show="logModal"/>
                 </n-card>
             </n-modal>
         </div>
@@ -158,6 +158,7 @@ export default defineComponent({
     setup() {
         const message = useMessage()
         const dialog = useDialog()
+        const dLog = ref(null);
         const createModal = ref(false);
         const infoModal = ref(false);
         const infoName = ref("");
@@ -246,7 +247,7 @@ export default defineComponent({
         const operationShow = (show: boolean, item) => {
             if (show) {
                 operationItem.value = item
-                operationMenu.value[0]['disabled'] = !(item.create === "Success" && item.state === "Running" && /^https*:\/\//.test(item.url))
+                operationMenu.value[0]['disabled'] = !(item.status === "Success" && item.state === "Running" && /^https*:\/\//.test(item.url))
                 if (item.state === 'Stopped') {
                     operationMenu.value[4]['disabled'] = false
                     operationMenu.value[5]['disabled'] = true
@@ -320,6 +321,7 @@ export default defineComponent({
                                 dialog.error({
                                     title: '请求错误',
                                     content: msg,
+                                    positiveText: '确定',
                                     onPositiveClick: () => {
                                         onLoad(false, true)
                                     }
@@ -343,6 +345,7 @@ export default defineComponent({
                     dialog.error({
                         title: '请求错误',
                         content: msg,
+                        positiveText: '确定',
                     })
                 }).finally(resolve)
             })
@@ -382,10 +385,10 @@ export default defineComponent({
             }
         }
         const stateText = (item) => {
-            if (item.create === 'Success') {
+            if (item.status === 'Success') {
                 return item.state || 'Unknown'
             } else {
-                return item.create || 'Error'
+                return item.status || 'Error'
             }
         }
         const onState = (item) => {
@@ -416,17 +419,25 @@ export default defineComponent({
                 }
                 items.value = data.list
             }).catch(({msg}) => {
-                tip && dialog.error({
-                    title: '请求错误',
-                    content: msg,
-                })
+                if (tip) {
+                    if (dLog.value) {
+                        dLog.value.destroy()
+                        dLog.value = null
+                    }
+                    dLog.value = dialog.error({
+                        title: '请求错误',
+                        content: msg,
+                        positiveText: '确定',
+                    })
+                }
             }).finally(() => {
                 loadIng.value = false
             })
         }
 
         onLoad(false, true)
-        const loadInter = setInterval(_ => onLoad(false, false), 1000 * 30)
+        const loadInter = setInterval(() => onLoad(false, false), 1000 * 30)
+
         onBeforeUnmount(() => {
             clearInterval(loadInter)
         })

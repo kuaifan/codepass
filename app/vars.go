@@ -42,9 +42,9 @@ type instanceModel struct {
 	Ip      string   `json:"ip"`
 	Name    string   `json:"name"`
 	Release string   `json:"release"`
-	State   string   `json:"state"`
+	State   string   `json:"state"` // 状态（实例）
 
-	Create   string `json:"create"`
+	Status   string `json:"status"` // 状态（自定义）
 	Password string `json:"password"`
 
 	OwnerName  string `json:"owner_name"`
@@ -160,7 +160,7 @@ func instanceInfo(name string, oneself bool) (*instanceModel, error) {
 // 获取工作区基本信息
 func instanceBase(entry *instanceModel) *instanceModel {
 	name := entry.Name
-	createFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
+	statusFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/status", name))
 	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/code-server/config.yaml", name)))
 	_ = viper.ReadInConfig()
 	entry.Password = viper.GetString("password")
@@ -174,7 +174,7 @@ func instanceBase(entry *instanceModel) *instanceModel {
 	if len(entry.Ipv4) > 0 {
 		entry.Ip = entry.Ipv4[0]
 	}
-	entry.Create = strings.TrimSpace(utils.ReadFile(createFile))
+	entry.Status = strings.TrimSpace(utils.ReadFile(statusFile))
 	entry.Domain, entry.Url = instanceDomain(name)
 	return entry
 }

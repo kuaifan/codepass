@@ -27,14 +27,18 @@ export default defineComponent({
         name: {
             type: String,
             required: true
-        }
+        },
+        show: {
+            type: Boolean,
+        },
     },
-    setup(props) {
+    setup(props, {emit}) {
         const dialog = useDialog()
 
-        const content = ref("");
-        const loading = ref(false);
         const nRef = ref(null);
+        const dLog = ref(null);
+        const loading = ref(false);
+        const content = ref("");
 
         const getData = () => {
             if (loading.value) {
@@ -54,9 +58,17 @@ export default defineComponent({
                     nRef.value?.scrollTo({ position: 'bottom', slient: true })
                 })
             }).catch(({msg}) => {
-                dialog.error({
+                if (dLog.value) {
+                    dLog.value.destroy()
+                    dLog.value = null
+                }
+                dLog.value = dialog.error({
                     title: '请求错误',
                     content: msg,
+                    positiveText: '确定',
+                    onPositiveClick: () => {
+                        emit("update:show", false)
+                    }
                 })
             }).finally(() => {
                 loading.value = false

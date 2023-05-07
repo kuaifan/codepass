@@ -66,6 +66,9 @@ export default defineComponent({
         name: {
             type: String,
             required: true
+        },
+        show: {
+            type: Boolean,
         }
     },
     setup(props, {emit}) {
@@ -96,6 +99,7 @@ export default defineComponent({
             dialog.error({
                 title: '请求错误',
                 content: msg,
+                positiveText: '确定',
             })
         }).finally(() => {
             readIng.value = false
@@ -169,11 +173,12 @@ export default defineComponent({
                     data
                 }).then(({msg}) => {
                     message.success(msg);
-                    emit('modifyDone')
+                    emit('update:show', false)
                 }).catch(({msg}) => {
                     dialog.error({
                         title: '请求错误',
                         content: msg,
+                        positiveText: '确定',
                     })
                 }).finally(() => {
                     loadIng.value = false
