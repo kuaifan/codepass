@@ -24,8 +24,8 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    right: 0;
+    bottom: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -56,7 +56,7 @@ export default defineComponent({
         AddCircleOutline
     },
     setup() {
-        const items = ref(utils.jsonParse(utils.GetCookie('result_msg')))
+        const items = ref(utils.jsonParse(utils.resultMsg()))
         if (!utils.isArray(items.value)) {
             items.value = []
         }

@@ -4,9 +4,9 @@
             <n-message-provider>
                 <n-notification-provider>
                     <n-dialog-provider>
-                        <router-view v-if="resultCode === 0"/>
-                        <Login v-else-if="resultCode === 401"/>
-                        <Result v-else/>
+                        <Login v-if="resultCode === 401"/>
+                        <Result v-else-if="resultCode > 0"/>
+                        <router-view v-else/>
                         <n-global-style/>
                     </n-dialog-provider>
                 </n-notification-provider>

@@ -12,6 +12,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -357,6 +358,9 @@ func GinRemoveCookie(c *gin.Context, name string) {
 
 // GinResult 返回结果
 func GinResult(c *gin.Context, code int, content string, values ...any) {
+	c.Header("Expires", "-1")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Pragma", "no-cache")
 	var data any
 	if len(values) == 1 {
 		data = values[0]
@@ -365,9 +369,6 @@ func GinResult(c *gin.Context, code int, content string, values ...any) {
 	} else {
 		data = values
 	}
-	//
-	GinSetCookie(c, "result_code", fmt.Sprintf("%d", code))
-	GinSetCookie(c, "result_msg", content)
 	//
 	if strings.Contains(c.GetHeader("Accept"), "application/json") {
 		// 接口返回
@@ -381,7 +382,10 @@ func GinResult(c *gin.Context, code int, content string, values ...any) {
 		if code == http.StatusMovedPermanently {
 			c.Redirect(code, content)
 		} else {
-			c.HTML(http.StatusOK, "/web/dist/index.html", gin.H{})
+			c.HTML(http.StatusOK, "/web/dist/index.html", gin.H{
+				"CODE": code,
+				"MSG":  url.QueryEscape(content),
+			})
 		}
 	}
 }

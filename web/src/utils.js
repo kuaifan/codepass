@@ -23,6 +23,27 @@ const utils = {
     },
 
     /**
+     * 获取对象值
+     * @param obj
+     * @param key
+     * @returns {*}
+     */
+    getObject(obj, key) {
+        const keys = key.replace(/,/g, "|").replace(/\./g, "|").split("|");
+        while (keys.length > 0) {
+            const k = keys.shift();
+            if (utils.isArray(obj)) {
+                obj = obj[utils.parseInt(k)] || "";
+            } else if (utils.isJson(obj)) {
+                obj = obj[k] || "";
+            } else {
+                break;
+            }
+        }
+        return obj;
+    },
+
+    /**
      * 转成数字
      * @param param
      * @returns {number|number}
@@ -191,6 +212,35 @@ const utils = {
     },
 
     /**
+     * 指定键获取url参数
+     * @param key
+     * @returns {*}
+     */
+    urlParameter(key) {
+        const params = utils.urlParameterAll();
+        return typeof key === "undefined" ? params : params[key];
+    },
+
+    urlParameterAll() {
+        let search = window.location.search || window.location.hash || "";
+        const index = search.indexOf("?");
+        if (index !== -1) {
+            search = search.substring(index + 1);
+        }
+        const arr = search.split("&");
+        const params = {};
+        arr.forEach((item) => { // 遍历数组
+            const index = item.indexOf("=");
+            if (index === -1) {
+                params[item] = "";
+            } else {
+                params[item.substring(0, index)] = item.substring(index + 1);
+            }
+        });
+        return params;
+    },
+
+    /**
      * 删除地址中的参数
      * @param url
      * @param parameter
@@ -203,11 +253,11 @@ const utils = {
             });
             return url;
         }
-        let urlparts = url.split('?');
-        if (urlparts.length >= 2) {
+        const urlParts = url.split('?');
+        if (urlParts.length >= 2) {
             //参数名前缀
             let prefix = encodeURIComponent(parameter) + '=';
-            let pars = urlparts[1].split(/[&;]/g);
+            let pars = urlParts[1].split(/[&;]/g);
 
             //循环查找匹配参数
             for (let i = pars.length; i-- > 0;) {
@@ -217,7 +267,7 @@ const utils = {
                 }
             }
 
-            return urlparts[0] + (pars.length > 0 ? '?' + pars.join('&') : '');
+            return urlParts[0] + (pars.length > 0 ? '?' + pars.join('&') : '');
         }
         return url;
     },
@@ -248,6 +298,22 @@ const utils = {
             return ""
         }
         return utils.rightDelete(url.replace("?&", "?"), '?');
+    },
+
+    /**
+     * 获取返回码
+     * @returns {*|number}
+     */
+    resultCode() {
+        return utils.parseInt(utils.urlParameter("result_code") || window.result_code)
+    },
+
+    /**
+     * 获取返回消息
+     * @returns {*|string|string}
+     */
+    resultMsg() {
+        return decodeURIComponent(utils.urlParameter("result_msg") || window.result_msg)
     },
 
     /**

@@ -16,8 +16,9 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    right: 0;
+    bottom: 0;
+    padding: 0 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -29,19 +30,18 @@ import utils from '../utils.js'
 
 export default defineComponent({
     setup() {
-        let resultCode = utils.GetCookie('result_code')
-        let resultMsg = utils.GetCookie('result_msg', '')
-        if (utils.parseInt(resultCode) === 400) {
-            resultCode = "warning"
+        let resultCode = utils.resultCode()
+        const resultMsg = utils.resultMsg()
+
+        if (resultCode === 400) {
+            resultCode = "info"
         }
 
         const status = ref<"500" | "error" | "info" | "success" | "warning" | "404" | "403" | "418">(utils.inArray(resultCode, ["500", "error", "info", "success", "warning", "404", "403", "418"]) ? resultCode : "info")
         const title = ref(resultMsg.length <= 10 ? resultMsg : '')
         const desc = ref(resultMsg.length > 10 ? resultMsg : '')
         const goHome = () => {
-            utils.RemoveCookie('result_code')
-            utils.RemoveCookie('result_msg')
-            window.location.href = ""
+            window.location.href = "/"
         }
 
         return {

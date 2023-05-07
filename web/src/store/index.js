@@ -37,7 +37,8 @@ export function loadUserInfo() {
 
 export function siteSetup() {
     return {
-        resultCode: utils.parseInt(utils.GetCookie('result_code')),
+        resultCode: utils.resultCode(),
+        resultMsg: utils.resultMsg(),
         themeName: themeNameRef,
         theme: themeRef,
     }

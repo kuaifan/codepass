@@ -4,6 +4,16 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>CodePass</title>
+    <script>
+        window.result_code = "{{.CODE}}"
+        window.result_msg = "{{.MSG}}"
+        if (!/^\d+$/.test(window.result_code)) {
+            window.result_code = 0
+            window.result_msg = ""
+        } else {
+            window.result_code = parseInt(window.result_code)
+        }
+    </script>
 </head>
 <body>
 <div id="app"></div>

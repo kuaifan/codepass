@@ -21,14 +21,14 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 	}
 	// 退出登录
 	if strings.HasPrefix(urlPath, "/oauth/logout") {
-		userToken := utils.GinGetCookie(c, "result_token")
+		userToken := utils.GinGetCookie(c, "user_token")
 		if userToken != "" {
 			apiFile := utils.RunDir(fmt.Sprintf("/.codepass/users/%s", userToken))
 			if utils.IsFile(apiFile) {
 				_ = os.Remove(apiFile)
 			}
 		}
-		utils.GinRemoveCookie(c, "result_token")
+		utils.GinRemoveCookie(c, "user_token")
 		utils.GinResult(c, http.StatusOK, "退出成功")
 		return
 	}
@@ -60,14 +60,14 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 			utils.GinResult(c, http.StatusOK, fmt.Sprintf("AccessToken 保存失败：%s", removeCriticalInformation(err.Error())))
 			return
 		}
-		utils.GinSetCookie(c, "result_token", userToken)
+		utils.GinSetCookie(c, "user_token", userToken)
 		utils.GinResult(c, http.StatusMovedPermanently, "/")
 		return
 	}
 	// 读取身份
 	apiFile := ""
 	userInfo := &githubUserModel{}
-	userToken := utils.GinGetCookie(c, "result_token")
+	userToken := utils.GinGetCookie(c, "user_token")
 	if userToken != "" {
 		apiFile = utils.RunDir(fmt.Sprintf("/.codepass/users/%s", userToken))
 		userData := utils.ReadFile(apiFile)
@@ -132,7 +132,8 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 		return
 	}
 	// 页面输出
-	utils.GinRemoveCookie(c, "result_code")
-	utils.GinRemoveCookie(c, "result_msg")
-	c.HTML(http.StatusOK, "/web/dist/index.html", gin.H{})
+	c.HTML(http.StatusOK, "/web/dist/index.html", gin.H{
+		"CODE": "",
+		"MSG":  "",
+	})
 }
