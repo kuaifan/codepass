@@ -151,6 +151,7 @@ repos_owner: {{.REPOS_OWNER}}
 repos_name: {{.REPOS_NAME}}
 repos_url: {{.REPOS_URL}}
 created_at: {{.CREATED_AT}}
+image: {{.IMAGE}}
 EOF
 cat > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/config/init.yaml <<-EOF
 runcmd:
@@ -244,6 +245,12 @@ CmdPath=$0
 
 # 全局变量
 # {{.NAME}}
+# {{.PROXY_DOMAIN}}
+# {{.PROXY_URI}}
+
+# {{.REPOS_NAME}}
+
+# {{.IMAGE}}
 # {{.OPERATION}}
 
 # 保存状态
@@ -251,11 +258,22 @@ STATUS() {
 	echo "$1" > {{.RUN_PATH}}/.codepass/workspaces/{{.NAME}}/status
 }
 
+SERVER() {
+	multipass exec {{.NAME}} -- sudo sh <<-EOE
+systemctl set-environment CODE_PASS_IMAGE={{.IMAGE}}
+systemctl set-environment PROXY_DOMAIN={{.PROXY_DOMAIN}}
+systemctl set-environment VSCODE_PROXY_URI={{.PROXY_URI}}
+systemctl set-environment DEFAULT_WORKSPACE=/workspace/{{.REPOS_NAME}}
+systemctl restart --now code-server@ubuntu
+EOE
+}
+
 start() {
 	STATUS "Starting"
 	echo "Starting..."
 	multipass start {{.NAME}}
 	if [ 0 -eq $? ]; then
+		SERVER
 		STATUS "Success"
 		echo "Started"
 	else
@@ -282,6 +300,7 @@ restart() {
 	echo "Restarting..."
 	multipass restart {{.NAME}}
 	if [ 0 -eq $? ]; then
+		SERVER
 		STATUS "Success"
 		echo "Restarted"
 	else

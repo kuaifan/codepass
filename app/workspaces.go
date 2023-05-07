@@ -282,15 +282,26 @@ func (model *ServiceModel) WorkspacesOperation(c *gin.Context) {
 		utils.GinResult(c, http.StatusBadRequest, "操作类型错误")
 		return
 	}
-	_, err := instanceInfo(name, true)
+	info, err := instanceInfo(name, true)
 	if err != nil {
 		utils.GinResult(c, http.StatusBadRequest, err.Error())
 		return
 	}
+	// 端口代理地址
+	_, url := instanceDomain(name)
+	proxyRegexp := regexp.MustCompile(`^(https*://)`)
+	proxyDomain := proxyRegexp.ReplaceAllString(url, "")
+	proxyUri := proxyRegexp.ReplaceAllString(url, "$1{{port}}-")
 	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/operation", name))
 	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/logs", name))
 	err = utils.WriteFile(cmdFile, utils.TemplateContent(utils.OperationContent, map[string]any{
-		"NAME":      name,
+		"NAME":         name,
+		"PROXY_DOMAIN": proxyDomain,
+		"PROXY_URI":    proxyUri,
+
+		"REPOS_NAME": info.ReposName,
+
+		"IMAGE":     info.Image,
 		"OPERATION": operation,
 	}))
 	if err != nil {
@@ -302,7 +313,7 @@ func (model *ServiceModel) WorkspacesOperation(c *gin.Context) {
 	// 执行操作脚本
 	go func() {
 		_, _ = utils.Cmd("-c", fmt.Sprintf("chmod +x %s", cmdFile))
-		_, _ = utils.Cmd("-c", fmt.Sprintf("/bin/bash %s > %s 2>&1", cmdFile, logFile))
+		_, _ = utils.Cmd("-c", fmt.Sprintf("/bin/bash %s >> %s 2>&1", cmdFile, logFile))
 		if operation == "delete" {
 			UpdateProxy()
 		}
