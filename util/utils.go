@@ -345,8 +345,8 @@ func GinGetCookie(c *gin.Context, name string) string {
 }
 
 // GinSetCookie Gin设置Cookie
-func GinSetCookie(c *gin.Context, name, value string) {
-	c.SetCookie(name, value, 0, "/", "", false, false)
+func GinSetCookie(c *gin.Context, name, value string, maxAge int) {
+	c.SetCookie(name, value, maxAge, "/", "", false, false)
 }
 
 // GinRemoveCookie Gin删除Cookie

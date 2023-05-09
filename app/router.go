@@ -60,7 +60,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 			utils.GinResult(c, http.StatusOK, fmt.Sprintf("AccessToken 保存失败：%s", removeCriticalInformation(err.Error())))
 			return
 		}
-		utils.GinSetCookie(c, "user_token", userToken)
+		utils.GinSetCookie(c, "user_token", userToken, 30*24*86400)
 		utils.GinResult(c, http.StatusMovedPermanently, "/")
 		return
 	}
