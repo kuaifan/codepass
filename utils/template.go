@@ -39,6 +39,7 @@ func Template(templateContent string, envMap map[string]interface{}) string {
 		panic(1)
 	}
 	envMap["RUN_PATH"] = RunDir("")
+	envMap["WORK_PATH"] = WorkDir("")
 	var buffer bytes.Buffer
 	_ = tmpl.Execute(&buffer, envMap)
 	return string(buffer.Bytes())

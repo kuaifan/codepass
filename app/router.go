@@ -16,14 +16,14 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 	urlPath := c.Request.URL.Path
 	// 静态资源
 	if strings.HasPrefix(urlPath, "/assets") {
-		c.File(utils.RunDir(fmt.Sprintf("/.codepass/web/dist%s", urlPath)))
+		c.File(utils.WorkDir("/web/dist%s", urlPath))
 		return
 	}
 	// 退出登录
 	if strings.HasPrefix(urlPath, "/oauth/logout") {
 		userToken := utils.GinGetCookie(c, "user_token")
 		if userToken != "" {
-			apiFile := utils.RunDir(fmt.Sprintf("/.codepass/users/%s", userToken))
+			apiFile := utils.WorkDir("/users/%s", userToken)
 			if utils.IsFile(apiFile) {
 				_ = os.Remove(apiFile)
 			}
@@ -55,7 +55,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 			utils.GinResult(c, http.StatusOK, fmt.Sprintf("解析用户信息失败：%s", removeCriticalInformation(err.Error())))
 			return
 		}
-		err = utils.WriteFile(utils.RunDir(fmt.Sprintf("/.codepass/users/%s", userToken)), string(userData))
+		err = utils.WriteFile(utils.WorkDir("/users/%s", userToken), string(userData))
 		if err != nil {
 			utils.GinResult(c, http.StatusOK, fmt.Sprintf("AccessToken 保存失败：%s", removeCriticalInformation(err.Error())))
 			return
@@ -69,7 +69,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 	userInfo := &githubUserModel{}
 	userToken := utils.GinGetCookie(c, "user_token")
 	if userToken != "" {
-		apiFile = utils.RunDir(fmt.Sprintf("/.codepass/users/%s", userToken))
+		apiFile = utils.WorkDir("/users/%s", userToken)
 		userData := utils.ReadFile(apiFile)
 		_ = json.Unmarshal([]byte(userData), userInfo)
 		if userInfo.ID == 0 {

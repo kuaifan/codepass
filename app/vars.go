@@ -119,7 +119,7 @@ func workspacesList() []*instanceModel {
 		}
 	}
 	//
-	dirEntry, err := os.ReadDir(utils.RunDir("/.codepass/workspaces"))
+	dirEntry, err := os.ReadDir(utils.WorkDir("/workspaces"))
 	if err != nil {
 		return nil
 	}
@@ -145,7 +145,7 @@ func workspacesList() []*instanceModel {
 
 // 获取工作区基本信息（通过工作区名称）
 func instanceInfo(name string, oneself bool) (*instanceModel, error) {
-	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
+	dirPath := utils.WorkDir("/workspaces/%s", name)
 	if !utils.IsDir(dirPath) {
 		return nil, fmt.Errorf("工作区不存在")
 	}
@@ -161,11 +161,11 @@ func instanceInfo(name string, oneself bool) (*instanceModel, error) {
 // 获取工作区基本信息
 func instanceBase(entry *instanceModel) *instanceModel {
 	name := entry.Name
-	statusFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/status", name))
-	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/code-server/config.yaml", name)))
+	statusFile := utils.WorkDir("/workspaces/%s/status", name)
+	viper.SetConfigFile(utils.WorkDir("/workspaces/%s/config/code-server/config.yaml", name))
 	_ = viper.ReadInConfig()
 	entry.Password = viper.GetString("password")
-	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/info.yaml", name)))
+	viper.SetConfigFile(utils.WorkDir("/workspaces/%s/config/info.yaml", name))
 	_ = viper.ReadInConfig()
 	entry.OwnerName = viper.GetString("owner_name")
 	entry.ReposOwner = viper.GetString("repos_owner")
@@ -198,10 +198,10 @@ func instanceDomain(name string) (string, string) {
 
 // 设置工作区状态（或日志）
 func instanceStatus(name, status, logText string) {
-	statusFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/status", name))
+	statusFile := utils.WorkDir("/workspaces/%s/status", name)
 	_ = utils.WriteFile(statusFile, status)
 	if logText != "" {
-		logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/logs", name))
+		logFile := utils.WorkDir("/workspaces/%s/logs", name)
 		_ = utils.AppendToFile(logFile, fmt.Sprintf("%s\n", logText))
 	}
 }

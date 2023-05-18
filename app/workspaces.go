@@ -69,7 +69,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		return
 	}
 	// 检测工作区是否已存在
-	dirPath := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s", name))
+	dirPath := utils.WorkDir("/workspaces/%s", name)
 	if utils.IsDir(dirPath) {
 		utils.GinResult(c, http.StatusBadRequest, "工作区已存在")
 		return
@@ -80,8 +80,8 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	proxyDomain := proxyRegexp.ReplaceAllString(url, "")
 	proxyUri := proxyRegexp.ReplaceAllString(url, "$1{{port}}-")
 	// 生成创建脚本
-	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
-	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/logs", name))
+	cmdFile := utils.WorkDir("/workspaces/%s/create", name)
+	logFile := utils.WorkDir("/workspaces/%s/logs", name)
 	err := utils.WriteFile(cmdFile, utils.Assets("/create.sh", map[string]any{
 		"NAME":         name,
 		"PASSWORD":     password,
@@ -130,8 +130,8 @@ func (model *ServiceModel) WorkspacesLog(c *gin.Context) {
 	if tail > 10000 {
 		tail = 10000
 	}
-	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/logs", name))
-	statusFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/status", name))
+	logFile := utils.WorkDir("/workspaces/%s/logs", name)
+	statusFile := utils.WorkDir("/workspaces/%s/status", name)
 	if !utils.IsFile(logFile) {
 		utils.GinResult(c, http.StatusBadRequest, "日志文件不存在")
 		return
@@ -202,11 +202,11 @@ func (model *ServiceModel) WorkspacesInfo(c *gin.Context) {
 	} else {
 		info = result
 	}
-	statusFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/status", name))
-	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/code-server/config.yaml", name)))
+	statusFile := utils.WorkDir("/workspaces/%s/status", name)
+	viper.SetConfigFile(utils.WorkDir("/workspaces/%s/config/code-server/config.yaml", name))
 	_ = viper.ReadInConfig()
 	password := viper.GetString("password")
-	viper.SetConfigFile(utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/config/info.yaml", name)))
+	viper.SetConfigFile(utils.WorkDir("/workspaces/%s/config/info.yaml", name))
 	_ = viper.ReadInConfig()
 	var (
 		ownerName  = viper.GetString("owner_name")
@@ -292,8 +292,8 @@ func (model *ServiceModel) WorkspacesOperation(c *gin.Context) {
 	proxyRegexp := regexp.MustCompile(`^(https*://)`)
 	proxyDomain := proxyRegexp.ReplaceAllString(url, "")
 	proxyUri := proxyRegexp.ReplaceAllString(url, "$1{{port}}-")
-	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/operation", name))
-	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/logs", name))
+	cmdFile := utils.WorkDir("/workspaces/%s/operation", name)
+	logFile := utils.WorkDir("/workspaces/%s/logs", name)
 	err = utils.WriteFile(cmdFile, utils.Assets("/operation.sh", map[string]any{
 		"NAME":         name,
 		"PROXY_DOMAIN": proxyDomain,

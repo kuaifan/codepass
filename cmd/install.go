@@ -14,7 +14,7 @@ var updateCmd = &cobra.Command{
 	Use:   "install",
 	Short: "安装服务",
 	PreRun: func(cmd *cobra.Command, args []string) {
-		cmdFile = utils.RunDir("/.codepass/install/cmd")
+		cmdFile = utils.WorkDir("/install/cmd")
 		//
 		if !utils.CheckOs() {
 			utils.PrintError("暂不支持的操作系统")

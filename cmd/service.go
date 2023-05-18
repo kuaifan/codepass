@@ -33,7 +33,7 @@ var serviceCmd = &cobra.Command{
 			utils.PrintError("未安装 multipass，请使用 ./codepass install 命令安装或手动安装")
 			os.Exit(1)
 		}
-		err = utils.WriteFile(utils.RunDir("/.codepass/service"), utils.FormatYmdHis(time.Now()))
+		err = utils.WriteFile(utils.WorkDir("/service"), utils.FormatYmdHis(time.Now()))
 		if err != nil {
 			utils.PrintError("无法写入文件")
 			os.Exit(1)
@@ -158,7 +158,7 @@ func loadTemplate() (*template.Template, error) {
 			if err != nil {
 				return nil, err
 			}
-			err = utils.WriteByte(utils.RunDir(fmt.Sprintf("/.codepass%s", name)), h)
+			err = utils.WriteByte(utils.WorkDir("%s", name), h)
 			if err != nil {
 				return nil, err
 			}
