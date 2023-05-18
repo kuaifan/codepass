@@ -93,7 +93,7 @@ var serviceCmd = &cobra.Command{
 			gin.SetMode(gin.ReleaseMode)
 		}
 		router := gin.Default()
-		templates, err := loadTemplate()
+		templates, err := loadWebTemplate()
 		if err != nil {
 			utils.PrintError(err.Error())
 			os.Exit(1)
@@ -147,7 +147,7 @@ var serviceCmd = &cobra.Command{
 	},
 }
 
-func loadTemplate() (*template.Template, error) {
+func loadWebTemplate() (*template.Template, error) {
 	t := template.New("")
 	for name, file := range assets.Web.Files {
 		if file.IsDir() {

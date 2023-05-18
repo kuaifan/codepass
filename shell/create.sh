@@ -120,7 +120,9 @@ if [ 0 -eq \$? ]; then
     echo "success" > /tmp/.code-judge
 else
     echo "error" > /tmp/.code-judge
+    exit 1
 fi
+sudo chmod -R 777 \$GOPATH
 EOE
 JUDGEB "Install"
 

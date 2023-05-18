@@ -84,7 +84,7 @@ func (model *ServiceModel) OAuth(c *gin.Context) {
 		items = append(items, gin.H{
 			"type":  "github",
 			"label": "使用GitHub登录",
-			"href":  fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s", ServiceConf.GithubClientId, redirectUri),
+			"href":  fmt.Sprintf("https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s&scope=repo,user:email", ServiceConf.GithubClientId, redirectUri),
 		})
 		content, _ := json.Marshal(&items)
 		utils.GinResult(c, http.StatusUnauthorized, string(content))
