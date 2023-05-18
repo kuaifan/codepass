@@ -1,7 +1,7 @@
 package app
 
 import (
-	utils "codepass/util"
+	"codepass/utils"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -82,7 +82,7 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 	// 生成创建脚本
 	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/create", name))
 	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/logs", name))
-	err := utils.WriteFile(cmdFile, utils.TemplateContent(utils.CreateExecContent, map[string]any{
+	err := utils.WriteFile(cmdFile, utils.Assets("/create.sh", map[string]any{
 		"NAME":         name,
 		"PASSWORD":     password,
 		"PROXY_DOMAIN": proxyDomain,
@@ -294,7 +294,7 @@ func (model *ServiceModel) WorkspacesOperation(c *gin.Context) {
 	proxyUri := proxyRegexp.ReplaceAllString(url, "$1{{port}}-")
 	cmdFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/operation", name))
 	logFile := utils.RunDir(fmt.Sprintf("/.codepass/workspaces/%s/logs", name))
-	err = utils.WriteFile(cmdFile, utils.TemplateContent(utils.OperationContent, map[string]any{
+	err = utils.WriteFile(cmdFile, utils.Assets("/operation.sh", map[string]any{
 		"NAME":         name,
 		"PROXY_DOMAIN": proxyDomain,
 		"PROXY_URI":    proxyUri,

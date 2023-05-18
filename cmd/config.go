@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	utils "codepass/util"
+	"codepass/utils"
 	"fmt"
 	"github.com/spf13/cobra"
 )

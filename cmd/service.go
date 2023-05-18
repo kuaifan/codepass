@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"codepass/app"
-	utils "codepass/util"
+	"codepass/assets"
+	"codepass/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
@@ -148,7 +149,7 @@ var serviceCmd = &cobra.Command{
 
 func loadTemplate() (*template.Template, error) {
 	t := template.New("")
-	for name, file := range Assets.Files {
+	for name, file := range assets.Web.Files {
 		if file.IsDir() {
 			continue
 		}

@@ -1,7 +1,7 @@
 package app
 
 import (
-	utils "codepass/util"
+	"codepass/utils"
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/viper"
