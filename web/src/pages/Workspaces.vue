@@ -11,18 +11,25 @@
                     <div class="input-box">
                         <n-input round v-model:value="searchKey" placeholder="">
                             <template #prefix>
-                                <n-icon :component="SearchOutline"/>
+                                <n-icon>
+                                    <SearchOutline/>
+                                </n-icon>
                             </template>
                         </n-input>
                         <div class="reload" @click="onLoad(true, true)">
                             <Loading v-if="loadIng && loadShow"/>
                             <n-icon v-else>
-                                <reload/>
+                                <ReloadIcon/>
                             </n-icon>
                         </div>
                     </div>
                     <div class="interval"></div>
-                    <n-button type="success" :render-icon="addIcon" @click="createModal = true">
+                    <n-button type="success" @click="createModal = true">
+                        <template #icon>
+                            <n-icon>
+                                <AddOutline/>
+                            </n-icon>
+                        </template>
                         创建工作区
                     </n-button>
                 </div>
@@ -92,7 +99,7 @@
                                     <n-button quaternary class="menu">
                                         <template #icon>
                                             <n-icon>
-                                                <ellipsis-vertical/>
+                                                <EllipsisVertical/>
                                             </n-icon>
                                         </template>
                                     </n-button>
@@ -136,7 +143,7 @@ import Create from "../components/Create.vue";
 import Loading from "../components/Loading.vue";
 import Log from "../components/Log.vue";
 import Info from "../components/Info.vue";
-import {AddOutline, EllipsisVertical, Reload, SearchOutline} from "@vicons/ionicons5";
+import {AddOutline, EllipsisVertical, Reload as ReloadIcon, SearchOutline} from "@vicons/ionicons5";
 import {useMessage, useDialog, NButton} from "naive-ui";
 import call from "../call.js";
 import utils from "../utils.js";
@@ -145,15 +152,14 @@ export default defineComponent({
     components: {
         Info,
         Log,
+        AddOutline,
         EllipsisVertical,
-        Reload, Loading, Create,
+        ReloadIcon,
+        SearchOutline,
+        Loading,
+        Create,
         Banner,
         Header,
-    },
-    computed: {
-        SearchOutline() {
-            return SearchOutline
-        }
     },
     setup() {
         const message = useMessage()
@@ -340,9 +346,6 @@ export default defineComponent({
                 }).finally(resolve)
             })
         }
-        const addIcon = () => {
-            return h(AddOutline);
-        }
         const createDone = () => {
             createModal.value = false
             onLoad(true, true)
@@ -446,7 +449,6 @@ export default defineComponent({
             operationLabel,
             operationShow,
             operationSelect,
-            addIcon,
             createDone,
             stateJudge,
             stateLoading,

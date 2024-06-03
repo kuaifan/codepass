@@ -10,6 +10,14 @@
                         quaternary
                         class="name"
                         @click="handleThemeUpdate">
+                    <template #icon>
+                        <n-icon v-if="themeName === 'light'" :size="14">
+                            <MoonIcon/>
+                        </n-icon>
+                        <n-icon v-else :size="16">
+                            <SunnyIcon/>
+                        </n-icon>
+                    </template>
                     {{ themeLabelMap[themeName] }}
                 </n-button>
                 <n-button
@@ -67,12 +75,12 @@
 <script lang="ts">
 import {defineComponent, computed, h, ref, VNodeChild} from "vue";
 import {useMessage} from 'naive-ui'
-import {EllipsisVertical} from "@vicons/ionicons5";
+import {EllipsisVertical, Moon as MoonIcon, Sunny as SunnyIcon} from "@vicons/ionicons5";
 import {useThemeName, useUserInfo, loadUserInfo} from '../store'
 import utils from "../utils.js";
 
 export default defineComponent({
-    components: {EllipsisVertical},
+    components: {EllipsisVertical, MoonIcon, SunnyIcon},
     setup() {
         loadUserInfo()
         const message = useMessage()
