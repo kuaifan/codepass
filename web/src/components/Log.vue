@@ -53,6 +53,17 @@ export default defineComponent({
             return true
         }
 
+        const formatLog = (str: string) => {
+            str = str.replace(/\033\[([\d;]*)m/g, '')
+            str = str.replace(/\033\[2K\033\[0A\033\[0E(.*)\033\[2K\033\[0A\033\[0E/g, '')
+            str = str.replace(/\033\[2K\033\[0A\033\[0E/g, '')
+            str = str.replace(/\u0008\/\u0008-\u0008\\\u0008\|/g, '')
+            str = str.replace(/\010\/\010-\010\\\010\|/g, '')
+            str = str.replace(/\r\n/g, '\n')
+            str = str.replace(/\r/g, '\n')
+            return str
+        }
+
         const getData = () => {
             if (loading.value) {
                 return
@@ -66,7 +77,7 @@ export default defineComponent({
                 }
             }).then(({data}) => {
                 const isBottom = scrollToBottom()
-                content.value = data.log
+                content.value = formatLog(data.log)
                 isBottom && nextTick(() => {
                     nRef.value?.scrollTo({ position: 'bottom' })
                 })

@@ -23,6 +23,8 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		disk     = utils.GinInput(c, "disk")
 		memory   = utils.GinInput(c, "memory")
 		image    = utils.GinInput(c, "image")
+		nodejs   = utils.GinInput(c, "nodejs")
+		golang   = utils.GinInput(c, "golang")
 	)
 	if repos == "" {
 		utils.GinResult(c, http.StatusBadRequest, "储存库地址不能为空")
@@ -68,6 +70,18 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		utils.GinResult(c, http.StatusBadRequest, "请选择有效的系统版本")
 		return
 	}
+	if nodejs == "" {
+		nodejs = "20.x"
+	} else if !utils.InArray(nodejs, []string{"16.x", "17.x", "18.x", "19.x", "20.x", "21.x", "22.x"}) {
+		utils.GinResult(c, http.StatusBadRequest, "请选择有效的NodeJs版本")
+		return
+	}
+	if golang == "" {
+		golang = "latest"
+	} else if !utils.InArray(golang, []string{"1.16", "1.17", "1.18", "1.19", "1.20", "1.21.0", "1.22.0", "latest"}) {
+		utils.GinResult(c, http.StatusBadRequest, "请选择有效的Golang版本")
+		return
+	}
 	// 检测工作区是否已存在
 	dirPath := utils.WorkDir("/workspaces/%s", name)
 	if utils.IsDir(dirPath) {
@@ -98,6 +112,8 @@ func (model *ServiceModel) WorkspacesCreate(c *gin.Context) {
 		"DISK":   disk,
 		"MEMORY": memory,
 		"IMAGE":  image,
+		"NODEJS": nodejs,
+		"GOLANG": golang,
 
 		"CREATED_AT": utils.FormatYmdHis(time.Now()),
 	}))

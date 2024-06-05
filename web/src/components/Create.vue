@@ -17,30 +17,38 @@
                     tag
                     placeholder="请输入或选择储存库地址"/>
         </n-form-item>
-        <n-form-item v-show="advancedShow" path="cpus" label="CPU">
-            <n-input v-model:value="formData.cpus" placeholder="请输入CPU核数">
-                <template #suffix>
-                    核
-                </template>
-            </n-input>
-        </n-form-item>
-        <n-form-item v-show="advancedShow" path="memory" label="内存">
-            <n-input v-model:value="formData.memory" placeholder="请输入内存大小">
-                <template #suffix>
-                    GB
-                </template>
-            </n-input>
-        </n-form-item>
-        <n-form-item v-show="advancedShow" path="disk" label="磁盘">
-            <n-input v-model:value="formData.disk" placeholder="请输入磁盘大小">
-                <template #suffix>
-                    GB
-                </template>
-            </n-input>
-        </n-form-item>
-        <n-form-item v-show="advancedShow" path="image" label="系统">
-            <n-select v-model:value="formData.image" :options="imageList" placeholder="请选择系统版本"/>
-        </n-form-item>
+        <div v-show="advancedShow">
+            <n-form-item path="cpus" label="CPU">
+                <n-input v-model:value="formData.cpus" placeholder="请输入CPU核数">
+                    <template #suffix>
+                        核
+                    </template>
+                </n-input>
+            </n-form-item>
+            <n-form-item path="memory" label="内存">
+                <n-input v-model:value="formData.memory" placeholder="请输入内存大小">
+                    <template #suffix>
+                        GB
+                    </template>
+                </n-input>
+            </n-form-item>
+            <n-form-item path="disk" label="磁盘">
+                <n-input v-model:value="formData.disk" placeholder="请输入磁盘大小">
+                    <template #suffix>
+                        GB
+                    </template>
+                </n-input>
+            </n-form-item>
+            <n-form-item path="image" label="系统">
+                <n-select v-model:value="formData.image" :options="imageList" placeholder="请选择系统版本"/>
+            </n-form-item>
+            <n-form-item path="nodejs" label="NodeJs">
+                <n-select v-model:value="formData.nodejs" :options="nodejsList" placeholder="请选择 Node.js 版本"/>
+            </n-form-item>
+            <n-form-item path="golang" label="Golang">
+                <n-select v-model:value="formData.golang" :options="golangList" placeholder="请选择 Golang 版本"/>
+            </n-form-item>
+        </div>
         <n-row :gutter="[0, 24]">
             <n-col :span="24">
                 <div class="button-group">
@@ -72,6 +80,8 @@ interface ModelType {
     memory: string | null
     disk: string | null
     image: string | null
+    nodejs: string | null
+    golang: string | null
 }
 
 export default defineComponent({
@@ -86,7 +96,13 @@ export default defineComponent({
             memory: "2",
             disk: "20",
             image: "20.04",
+            nodejs: "20.x",
+            golang: "latest",
         })
+        const firstUpperCase = (str: string): string => {
+            const [first, ...rest] = Array.from(str);
+            return first.toUpperCase() + rest.join('');
+        }
 
         const reposRef = ref(null)
         utils.IDBArray("userRepos").then((data) => {
@@ -112,6 +128,18 @@ export default defineComponent({
         const imageList = ["18.04", "20.04", "22.04"].map(item => {
             return {
                 label: `Ubuntu ${item}`,
+                value: item
+            }
+        })
+        const nodejsList = ["16.x", "17.x", "18.x", "19.x", "20.x", "21.x", "22.x"].map(item => {
+            return {
+                label: item,
+                value: item
+            }
+        })
+        const golangList = ["1.16","1.17", "1.18", "1.19", "1.20", "1.21.0", "1.22.0", "latest"].map(item => {
+            return {
+                label: firstUpperCase(item),
                 value: item
             }
         })
@@ -245,6 +273,8 @@ export default defineComponent({
             formRules,
             reposComputed,
             imageList,
+            nodejsList,
+            golangList,
             reposBlur,
             handleSubmit
         }

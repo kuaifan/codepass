@@ -19,6 +19,8 @@ CmdPath=$0
 # {{.DISK}}
 # {{.MEMORY}}
 # {{.IMAGE}}
+# {{.NODEJS}}
+# {{.GOLANG}}
 
 # {{.CREATED_AT}}
 
@@ -64,10 +66,12 @@ repos_name: {{.REPOS_NAME}}
 repos_url: {{.REPOS_URL}}
 created_at: {{.CREATED_AT}}
 image: {{.IMAGE}}
+nodejs: {{.NODEJS}}
+golang: {{.GOLANG}}
 EOF
 cat > {{.WORK_PATH}}/workspaces/{{.NAME}}/config/init.yaml <<-EOF
 runcmd:
-  - curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+  - curl -sL https://deb.nodesource.com/setup_{{.NODEJS}} | sudo -E bash -
   - sudo apt-get install -y nodejs make gcc g++ python3-pip
   - sudo curl -sSL https://get.docker.com/ | sh
   - sudo systemctl start docker
@@ -114,7 +118,11 @@ else
 fi
 # golang
 GOPATH="/home/go"
-curl -sL https://go-install.netlify.app/install.sh | sudo -E bash -
+if [ "{{.GOLANG}}" = "latest" ]; then
+    curl -sL https://go-install.netlify.app/install.sh | sudo -E bash -
+else
+    curl -sL https://go-install.netlify.app/install.sh | sudo -E bash -s -- -v {{.GOLANG}}
+fi
 /usr/local/go/bin/go version > /dev/null 2>&1
 if [ 0 -eq \$? ]; then
     echo "success" > /tmp/.code-judge
